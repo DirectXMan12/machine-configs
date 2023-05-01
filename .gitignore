@@ -1,8 +1,3 @@
 # vim
 *~
 *.swp
-
-# nixos
-
-# cause we can't check this in per-machine yet
-/hardware-configuration.nix
