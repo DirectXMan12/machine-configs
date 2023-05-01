@@ -37,6 +37,7 @@
   # Enable sound.
   # sound.enable = true;
   # hardware.pulseaudio.enable = true;
+  # NB(directxman12): enabled in another file via pipewire
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.directxman12 = {

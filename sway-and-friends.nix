@@ -23,6 +23,7 @@
     # other windowing-related stuff
     xdg-utils # for xdg-open
     gnome3.adwaita-icon-theme # for cursors and such
+    pavucontrol # needed to manage sound, waybar sound item
   ];
 
   # screensharing support:
