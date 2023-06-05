@@ -25,19 +25,21 @@
 				# make pkgs.unstable available in modules
 				({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-unstable ]; })
 
+				./configuration.nix
 				./sway-and-friends.nix
 				./common-system-apps.nix
 			];
 
 			x1Modules = commonModules ++ [
-				./configuration.nix
+				./systems/yasamin/configuration.nix
+				./systems/yasamin/hardware.nix
 				nixos-hardware.nixosModules.lenovo-thinkpad-x1-9th-gen
 			];
 
 		in {
 			nixosConfigurations.yasamin = nixpkgs.lib.nixosSystem {
 				inherit system;
-				inherit modules;
+				modules = x1Modules;
 			};
 			nixosConfigurations.yasamin-print = nixpkgs.lib.nixosSystem {
 				inherit system;
