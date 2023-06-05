@@ -8,13 +8,10 @@
     [ (modulesPath + "/installer/scan/not-detected.nix")
     ];
 
-  boot.initrd.availableKernelModules = [ "xhci_pci" "thunderbolt" "nvme" "usb_storage" "sd_mod" ];
+  boot.initrd.availableKernelModules = [ "xhci_pci" "thunderbolt" "nvme" ];
   boot.initrd.kernelModules = [ "dm-snapshot" ];
   boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
-
-  # ok but ignoring that bit above this next bit is custom cause
-  # nixos-generate-config can't handle lvm on luks quite yet
 
   boot.initrd.luks.devices."cryptroot" = {
     device = "/dev/disk/by-uuid/72a6ee2f-ef4f-4dd4-aaa6-eb217b8316fe";
@@ -30,6 +27,11 @@
   fileSystems."/boot" =
     { device = "/dev/disk/by-uuid/6EF6-1192";
       fsType = "vfat";
+    };
+
+  fileSystems."/books" =
+    { device = "/dev/disk/by-uuid/7ae98c6d-27e9-49e9-a009-ffcbf4ff21e9";
+      fsType = "ext4";
     };
 
   swapDevices =

@@ -9,12 +9,29 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
     ];
-  
+
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   # Use the systemd-boot EFI boot loader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  boot = {
+    # pretty boot
+    plymouth = {
+      enable = true;
+      theme = "breeze";
+    };
+
+    # TODO(directxman12): try out `initrd.systemd.enable` for password prompt in plymouth
+    # (see https://github.com/NixOS/nixpkgs/issues/26722)
+
+    # actual boot details
+    loader = {
+      systemd-boot = {
+        enable = true;
+        consoleMode = "auto"; # a slightly higher resolution, hopefully
+      };
+      efi.canTouchEfiVariables = true;
+    };
+  };
 
   networking.hostName = "yasamin"; # Define your hostname.
   # Pick only one of the below networking options.
@@ -31,8 +48,8 @@
     keyMap = "us";
   };
 
-  # Enable CUPS to print documents.
-  # services.printing.enable = true;
+  # Enable CUPS to print documents. (in flake.nix for alt config)
+  #services.printing.enable = true;
 
   # Enable sound.
   # sound.enable = true;

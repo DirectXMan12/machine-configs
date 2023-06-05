@@ -14,6 +14,9 @@
     ripgrep
     # dev crashes on fullscreen & pipewire atm
     unstable.google-chrome-beta
+
+    # needed for flakes when git is present
+    git
   ];
 
   programs.neovim = {

@@ -20,18 +20,44 @@
           ];
         };
       };
-    
+
+      commonModules = [
+        # make pkgs.unstable available in modules
+        ({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-unstable ]; })
+
+        ./sway-and-friends.nix
+        ./common-system-apps.nix
+      ];
+
+      x1Modules = commonModules ++ [
+        ./configuration.nix
+        nixos-hardware.nixosModules.lenovo-thinkpad-x1-9th-gen
+      ];
+
     in {
       nixosConfigurations.yasamin = nixpkgs.lib.nixosSystem {
         inherit system;
-        modules = [
-          # make pkgs.unstable available in modules
-          ({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-unstable ]; })
-          ./configuration.nix
-          nixos-hardware.nixosModules.lenovo-thinkpad-x1-9th-gen
-          ./sway-and-friends.nix
-          ./common-system-apps.nix
+        inherit modules;
+      };
+      nixosConfigurations.yasamin-print = nixpkgs.lib.nixosSystem {
+        inherit system;
+        modules = x1Modules ++ [
+          ({ pkgs, ... }: {
+            services.printing.enable = true;
+            # enable wifi printing
+            services.avahi = {
+              enable = true;
+              nssmdns = true;
+              openFirewall = true;
+            };
+          })
         ];
+      };
+      nixosConfiguration.heresy = nixpkgs.lib.nixosSystem {
+      	inherit system;
+	modules = commonModules ++ [
+
+	];
       };
     };
 }
