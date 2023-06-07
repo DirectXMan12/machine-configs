@@ -3,7 +3,7 @@
 
 	# use a released version
 	inputs = {
-		nixpkgs.url = "nixpkgs/nixos-22.11";
+		nixpkgs.url = "nixpkgs/nixos-23.05";
 		nixpkgs-unstable.url = "nixpkgs/nixos-unstable";
 	};
 
@@ -55,7 +55,7 @@
 					})
 				];
 			};
-			nixosConfiguration.heresy = nixpkgs.lib.nixosSystem {
+			nixosConfigurations.heresy = nixpkgs.lib.nixosSystem {
 				inherit system;
 				modules = commonModules ++ [
 
