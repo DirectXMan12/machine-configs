@@ -12,8 +12,7 @@
 		bat
 		fd
 		ripgrep
-		# dev crashes on fullscreen & pipewire atm
-		unstable.google-chrome-beta
+		unstable.google-chrome-dev
 
 		# needed for flakes when git is present
 		git
