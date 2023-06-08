@@ -58,7 +58,9 @@
 			nixosConfigurations.heresy = nixpkgs.lib.nixosSystem {
 				inherit system;
 				modules = commonModules ++ [
-
+					./systems/heresy/configuration.nix
+					./systems/heresy/hardware.nix
+					nixos-hardware.nixosModules.lenovo-thinkpad-x1-extreme-gen4
 				];
 			};
 		};
