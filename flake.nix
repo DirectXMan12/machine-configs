@@ -5,9 +5,13 @@
 	inputs = {
 		nixpkgs.url = "nixpkgs/nixos-23.05";
 		nixpkgs-unstable.url = "nixpkgs/nixos-unstable";
+		lanzaboote = {
+			url = "github:nix-community/lanzaboote";
+			inputs.nixpkgs.follows = "nixpkgs";
+		};
 	};
 
-	outputs = { self, nixpkgs, nixos-hardware, nixpkgs-unstable, ... }@attrs:
+	outputs = { self, nixpkgs, nixos-hardware, nixpkgs-unstable, lanzaboote, ... }@attrs:
 		let 
 			system = "x86_64-linux";
 			overlay-unstable = final: prev: {
@@ -58,6 +62,7 @@
 			nixosConfigurations.heresy = nixpkgs.lib.nixosSystem {
 				inherit system;
 				modules = commonModules ++ [
+					lanzaboote.nixosModules.lanzaboote
 					./systems/heresy/configuration.nix
 					./systems/heresy/hardware.nix
 					nixos-hardware.nixosModules.lenovo-thinkpad-x1-extreme-gen4

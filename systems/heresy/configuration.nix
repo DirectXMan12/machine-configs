@@ -13,6 +13,17 @@
 	console.font = "${pkgs.terminus_font}/share/consolefonts/ter-v32n.psf.gz";
 	console.earlySetup = true; # from 22.11, for full disk encryption passwords
 
+	# secureboot
+	environment.systemPackages = with pkgs; [
+		sbctl
+	];
+	boot.bootspec.enable = true;
+	boot.lanzaboote = {
+		enable = true;
+		pkiBundle = "/etc/secureboot";
+	};
+	boot.loader.systemd-boot.enable = pkgs.lib.mkForce false;
+
 	# This value determines the NixOS release from which the default
 	# settings for stateful data, like file locations and database versions
 	# on your system were taken. It's perfectly fine and recommended to leave
