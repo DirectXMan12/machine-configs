@@ -24,11 +24,15 @@
 	};
 	boot.loader.systemd-boot.enable = pkgs.lib.mkForce false;
 
-
 	# nvidia
 	hardware.nvidia.modesetting.enable = true; # for sway, I believe
 	# the rest is from nixos-hardware, enabled via modules
 	boot.kernelPackages = pkgs.linuxKernel.packages.linux_6_3; # for nouveau support for my gpu
+
+	# docker
+	virtualisation.docker.enable = true;
+	users.users.directxman12.extraGroups = [ "docker" ];
+
 	# This value determines the NixOS release from which the default
 	# settings for stateful data, like file locations and database versions
 	# on your system were taken. It's perfectly fine and recommended to leave
