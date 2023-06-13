@@ -3,7 +3,7 @@
 {
 	environment.systemPackages = with pkgs; [
 		# sway itself, and other bits
-		unstable.sway
+		sway
 		wayland
 		swaylock	# lock...
 		swayidle	# ...and auto-lock

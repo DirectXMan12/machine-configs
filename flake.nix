@@ -9,6 +9,10 @@
 			url = "github:nix-community/lanzaboote";
 			inputs.nixpkgs.follows = "nixpkgs";
 		};
+		nixpkgs-wayland.url = "github:nix-community/nixpkgs-wayland";
+
+		# only needed if you use as a package set:
+		nixpkgs-wayland.inputs.nixpkgs.follows = "nixpkgs";
 	};
 
 	outputs = { self, nixpkgs, nixos-hardware, nixpkgs-unstable, lanzaboote, ... }@attrs:
@@ -40,6 +44,18 @@
 				nixos-hardware.nixosModules.lenovo-thinkpad-x1-9th-gen
 			];
 
+			heresyModules = commonModules ++ [
+				lanzaboote.nixosModules.lanzaboote
+				./systems/heresy/configuration.nix
+				./systems/heresy/hardware.nix
+				nixos-hardware.nixosModules.lenovo-thinkpad-x1-extreme-gen4
+
+				# useful for sway fractional scaling and such
+				({ config, lib, ...}: {
+					nixpkgs.overlays = [ attrs.nixpkgs-wayland.overlay ];
+				})
+			];
+
 		in {
 			nixosConfigurations.yasamin = nixpkgs.lib.nixosSystem {
 				inherit system;
@@ -61,12 +77,7 @@
 			};
 			nixosConfigurations.heresy = nixpkgs.lib.nixosSystem {
 				inherit system;
-				modules = commonModules ++ [
-					lanzaboote.nixosModules.lanzaboote
-					./systems/heresy/configuration.nix
-					./systems/heresy/hardware.nix
-					nixos-hardware.nixosModules.lenovo-thinkpad-x1-extreme-gen4
-				];
+				modules = heresyModules;
 			};
 		};
 }
