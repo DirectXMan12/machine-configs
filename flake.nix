@@ -79,5 +79,14 @@
 				inherit system;
 				modules = heresyModules;
 			};
+			nixosConfigurations.heresy-docker = nixpkgs.lib.nixosSystem {
+				inherit system;
+				modules = heresyModules ++ [
+					({ config, pkgs, ... }: {
+						virtualisation.docker.enable = true;
+						users.users.directxman12.extraGroups = [ "docker" ];
+					})
+				];
+			};
 		};
 }
