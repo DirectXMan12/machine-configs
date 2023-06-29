@@ -1,7 +1,9 @@
 { config, pkgs, ... }:
 
 {
-	environment.systemPackages = with pkgs; [
+	# unstable for latest wayland jazz & also to resolve
+	# nix-community/nixpkgs-wayland#411
+	environment.systemPackages = with pkgs.unstable; [
 		# sway itself, and other bits
 		sway
 		wayland
@@ -57,6 +59,7 @@
 	# we also *miiiight* need to restart pipewire and such to ensure they get the right session variables according to the sway page on the nixos wiki, but lets see, but let's see
 
 	programs.sway = {
+		package = pkgs.unstable.sway;
 		enable = true;
 		wrapperFeatures.gtk = true;
 		wrapperFeatures.base = true;

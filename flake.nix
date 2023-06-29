@@ -12,7 +12,7 @@
 		nixpkgs-wayland.url = "github:nix-community/nixpkgs-wayland";
 
 		# only needed if you use as a package set:
-		nixpkgs-wayland.inputs.nixpkgs.follows = "nixpkgs";
+		nixpkgs-wayland.inputs.nixpkgs.follows = "nixpkgs-unstable";
 	};
 
 	outputs = { self, nixpkgs, nixos-hardware, nixpkgs-unstable, lanzaboote, ... }@attrs:
@@ -26,6 +26,8 @@
 						"google-chrome"
 						"google-chrome-beta"
 					];
+					# overlay for using unstable-sway in sway-and-friends
+					overlays = [ attrs.nixpkgs-wayland.overlay ];
 				};
 			};
 
@@ -49,11 +51,6 @@
 				./systems/heresy/configuration.nix
 				./systems/heresy/hardware.nix
 				nixos-hardware.nixosModules.lenovo-thinkpad-x1-extreme-gen4
-
-				# useful for sway fractional scaling and such
-				({ config, lib, ...}: {
-					nixpkgs.overlays = [ attrs.nixpkgs-wayland.overlay ];
-				})
 			];
 
 		in {
