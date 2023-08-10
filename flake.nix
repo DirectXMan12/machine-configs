@@ -38,6 +38,7 @@
 				./configuration.nix
 				./sway-and-friends.nix
 				./common-system-apps.nix
+				./audio.nix
 			];
 
 			x1Modules = commonModules ++ [
