@@ -24,7 +24,7 @@
 
 		# other windowing-related stuff
 		xdg-utils # for xdg-open
-		gnome3.adwaita-icon-theme # for cursors and such
+		adwaita-icon-theme # for cursors and such
 		pavucontrol # needed to manage sound, waybar sound item
 	];
 
@@ -37,6 +37,17 @@
 		alsa = {
 			enable = true;
 			support32Bit = true;
+		};
+		# enable hiqual audio support for headphone stuff
+		extraConfig = {
+			pipewire = {
+				"90-hiqual" = {
+					"context.properties" = {
+						"default.clock.rate" = 96000;
+						"default.clock.allowed-rates" = [ 44100 48000 88200 96000 176400 192000 ];
+					};
+				};
+			};
 		};
 	};
 	# ...then the portal service for wlroots
