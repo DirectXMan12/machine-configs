@@ -3,7 +3,7 @@
 
 	# use a released version
 	inputs = {
-		nixpkgs.url = "nixpkgs/nixos-23.05";
+		nixpkgs.url = "nixpkgs/nixos-24.05";
 		nixpkgs-unstable.url = "nixpkgs/nixos-unstable";
 		lanzaboote = {
 			url = "github:nix-community/lanzaboote";

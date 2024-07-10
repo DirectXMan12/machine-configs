@@ -66,7 +66,7 @@
 	};
 
 	# for waybar
-	fonts.fonts = with pkgs; [
+	fonts.packages = with pkgs; [
 		# for waybar
 		font-awesome
 		(nerdfonts.override { fonts = [ "DejaVuSansMono" ]; })
