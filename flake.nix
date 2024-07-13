@@ -30,19 +30,22 @@
 			mkSystem = { name, userFacing, modules ? [], extra ? {} }: nixpkgs.lib.nixosSystem {
 				inherit system;
 				modules = [
-					./allowedUnfree-polyfill.nix
-					./configuration.nix
+					./modules/utils/allowedUnfree-polyfill.nix
+					./modules/common/boot.nix
+					./modules/common/base.nix
+					./modules/common/users.nix
 					./systems/${name}/configuration.nix
 					./systems/${name}/hardware.nix
 				] ++ modules ++ nixpkgs.lib.optionals (userFacing) [
 					# make pkgs.unstable available in modules
 					({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-unstable-with-sway ]; })
-					./home-manager-systems.nix
-					./sway-and-friends.nix
-					./common-system-apps.nix
+					./modules/user-facing/home-manager-systems.nix
+					./modules/user-facing/sway-and-friends.nix
+					./modules/user-facing/common-system-apps.nix
 				];
 			} // extra;
 		in rec {
+			# yasamin
 			nixosConfigurations.yasamin = mkSystem {
 				name = "yasamin";
 				userFacing = true;
@@ -64,6 +67,7 @@
 				];
 			};
 
+			# heresy
 			nixosConfigurations.heresy = mkSystem {
 				name = "heresy";
 				userFacing = true;
@@ -81,6 +85,7 @@
 				];
 			};
 
+			# music.devices
 			nixosConfigurations.music = mkSystem {
 				name = "music";
 				userFacing = false;
