@@ -67,24 +67,6 @@
 				];
 			};
 
-			# heresy
-			nixosConfigurations.heresy = mkSystem {
-				name = "heresy";
-				userFacing = true;
-				modules = [
-					lanzaboote.nixosModules.lanzaboote
-					nixos-hardware.nixosModules.lenovo-thinkpad-x1-extreme-gen4
-				];
-			};
-			nixosConfigurations.heresy-docker = nixosConfigurations.heresy // {
-				modules = nixpkgs.lib.mkAfter [
-					({ config, pkgs, ... }: {
-						virtualisation.docker.enable = true;
-						users.users.directxman12.extraGroups = [ "docker" ];
-					})
-				];
-			};
-
 			# music.devices
 			nixosConfigurations.music = mkSystem {
 				name = "music";
