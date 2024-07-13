@@ -1,7 +1,7 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
-	nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (pkgs.lib.getName pkg) [
+	allowedUnfree = lib.mkAfter [
 		"google-chrome-dev"
 		"google-chrome"
 		"google-chrome-beta"

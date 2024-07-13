@@ -18,49 +18,40 @@
 	outputs = { self, nixpkgs, nixos-hardware, nixpkgs-unstable, lanzaboote, ... }@attrs:
 		let 
 			system = "x86_64-linux";
-			overlay-unstable = final: prev: {
+			overlay-unstable-with-sway = final: prev: {
 				unstable = import nixpkgs-unstable {
 					system = "${prev.system}";
-					config.allowUnfreePredicate = pkg: builtins.elem (pkg.pname or (builtins.parseDrvName pkg.name).name) [
-						"google-chrome-dev"
-						"google-chrome"
-						"google-chrome-beta"
-					];
+					config.allowUnfreePredicate = pkg: builtins.elem (pkg.pname or (builtins.parseDrvName pkg.name).name) final.allowedUnfree;
 					# overlay for using unstable-sway in sway-and-friends
 					overlays = [ attrs.nixpkgs-wayland.overlay ];
 				};
 			};
 
-			commonModules = [
-				# make pkgs.unstable available in modules
-				({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-unstable ]; })
-
-				./configuration.nix
-				./sway-and-friends.nix
-				./common-system-apps.nix
-			];
-
-			x1Modules = commonModules ++ [
-				./systems/yasamin/configuration.nix
-				./systems/yasamin/hardware.nix
-				nixos-hardware.nixosModules.lenovo-thinkpad-x1-9th-gen
-			];
-
-			heresyModules = commonModules ++ [
-				lanzaboote.nixosModules.lanzaboote
-				./systems/heresy/configuration.nix
-				./systems/heresy/hardware.nix
-				nixos-hardware.nixosModules.lenovo-thinkpad-x1-extreme-gen4
-			];
-
-		in {
-			nixosConfigurations.yasamin = nixpkgs.lib.nixosSystem {
+			mkSystem = { name, userFacing, modules ? [], extra ? {} }: nixpkgs.lib.nixosSystem {
 				inherit system;
-				modules = x1Modules;
+				modules = [
+					./allowedUnfree-polyfill.nix
+					./configuration.nix
+					./systems/${name}/configuration.nix
+					./systems/${name}/hardware.nix
+				] ++ modules ++ nixpkgs.lib.optionals (userFacing) [
+					# make pkgs.unstable available in modules
+					({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-unstable-with-sway ]; })
+					./home-manager-systems.nix
+					./sway-and-friends.nix
+					./common-system-apps.nix
+				];
+			} // extra;
+		in rec {
+			nixosConfigurations.yasamin = mkSystem {
+				name = "yasamin";
+				userFacing = true;
+				modules = [
+					nixos-hardware.nixosModules.lenovo-thinkpad-x1-9th-gen
+				];
 			};
-			nixosConfigurations.yasamin-print = nixpkgs.lib.nixosSystem {
-				inherit system;
-				modules = x1Modules ++ [
+			nixosConfigurations.yasamin-print = nixosConfigurations.yasamin // {
+				modules = nixpkgs.lib.mkAfter [
 					({ pkgs, ... }: {
 						services.printing.enable = true;
 						# enable wifi printing
@@ -72,18 +63,27 @@
 					})
 				];
 			};
-			nixosConfigurations.heresy = nixpkgs.lib.nixosSystem {
-				inherit system;
-				modules = heresyModules;
+
+			nixosConfigurations.heresy = mkSystem {
+				name = "heresy";
+				userFacing = true;
+				modules = [
+					lanzaboote.nixosModules.lanzaboote
+					nixos-hardware.nixosModules.lenovo-thinkpad-x1-extreme-gen4
+				];
 			};
-			nixosConfigurations.heresy-docker = nixpkgs.lib.nixosSystem {
-				inherit system;
-				modules = heresyModules ++ [
+			nixosConfigurations.heresy-docker = nixosConfigurations.heresy // {
+				modules = nixpkgs.lib.mkAfter [
 					({ config, pkgs, ... }: {
 						virtualisation.docker.enable = true;
 						users.users.directxman12.extraGroups = [ "docker" ];
 					})
 				];
+			};
+
+			nixosConfigurations.music = mkSystem {
+				name = "music";
+				userFacing = false;
 			};
 		};
 }
