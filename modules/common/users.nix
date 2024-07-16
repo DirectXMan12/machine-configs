@@ -8,6 +8,5 @@
 			"wheel" # Enable ‘sudo’ for the user.
 			"networkmanager"
 		];
-		shell = "/home/directxman12/.nix-profile/bin/zsh";
 	};
 }

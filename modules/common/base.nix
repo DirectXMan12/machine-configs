@@ -30,5 +30,6 @@
 		vim
 		wget
 		curl
+		git # needed for managing this config
 	];
 }
