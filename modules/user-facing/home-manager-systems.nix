@@ -3,6 +3,6 @@
 {
 	# use the shell from home-manager
 	users.users.directxman12 = {
-		shell = lib.mkDefault "/home/directxman12/.nix-profile/bin/zsh";
+		shell = "/home/directxman12/.nix-profile/bin/zsh";
 	};
 }
