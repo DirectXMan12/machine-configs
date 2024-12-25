@@ -3,19 +3,20 @@
 
 	# use a released version
 	inputs = {
-		nixpkgs.url = "nixpkgs/nixos-24.05";
+		nixpkgs.url = "nixpkgs/nixos-24.11";
 		nixpkgs-unstable.url = "nixpkgs/nixos-unstable";
 		lanzaboote = {
 			url = "github:nix-community/lanzaboote";
 			inputs.nixpkgs.follows = "nixpkgs";
 		};
 		nixpkgs-wayland.url = "github:nix-community/nixpkgs-wayland";
+		nixos-sbc.url = "github:directxman12/nixos-sbc/main";
 
-		# only needed if you use as a package set:
 		nixpkgs-wayland.inputs.nixpkgs.follows = "nixpkgs-unstable";
+		nixos-sbc.inputs.nixpkgs.follows = "nixpkgs-unstable";
 	};
 
-	outputs = { self, nixpkgs, nixos-hardware, nixpkgs-unstable, lanzaboote, ... }@attrs:
+	outputs = { self, nixpkgs, nixos-hardware, nixpkgs-unstable, lanzaboote, nixos-sbc, ... }@attrs:
 		let
 			system = "x86_64-linux";
 			overlay-unstable-with-sway = final: prev: {
@@ -80,6 +81,21 @@
 				name = "music";
 				cfg = {
 					local.userFacing = false;
+				};
+			};
+
+			# sanctuary-router
+			nixosConfigurations.sanctuary-router = mkSystem {
+				name = "sanctuary-router";
+				modules = [
+						nixos-sbc.nixosModules.default
+						nixos-sbc.nixosModules.boards.bananapi.bpir4
+						nixos-sbc.nixosModules.cache
+				];
+				cfg = {
+					local.userFacing = false;
+					local.uefi = false;
+					local.networking = "systemd";
 				};
 			};
 		};

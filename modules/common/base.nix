@@ -24,6 +24,7 @@
 		# emergency stuff, most other things should go
 		# in home-manager configs
 		vim
+		neovim
 		wget
 		curl
 		git # needed for managing this config
