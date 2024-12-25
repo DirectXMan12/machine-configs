@@ -31,18 +31,12 @@
 				inherit system;
 				modules = [
 					./modules/utils/allowedUnfree-polyfill.nix
-					./modules/common/boot.nix
-					./modules/common/base.nix
-					./modules/common/users.nix
-					./systems/${name}/configuration.nix
-					./systems/${name}/hardware.nix
+					./modules/common
+					./systems/${name}
 				] ++ modules ++ nixpkgs.lib.optionals (userFacing) [
 					# make pkgs.unstable available in modules
 					({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-unstable-with-sway ]; })
-					./modules/user-facing/boot.nix
-					./modules/user-facing/home-manager-systems.nix
-					./modules/user-facing/sway-and-friends.nix
-					./modules/user-facing/common-system-apps.nix
+					./modules/user-facing
 				];
 			} // extra;
 		in rec {
