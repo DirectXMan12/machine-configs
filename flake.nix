@@ -42,6 +42,7 @@
 					./modules/utils/allowedUnfree-polyfill.nix
 					./modules/common
 					./systems/${name}
+					({ ... }: { networking.hostName = name; })
 				] ++ modules ++ nixpkgs.lib.optionals (userFacing) [
 					# make pkgs.unstable available in modules
 					({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-unstable-with-sway ]; })

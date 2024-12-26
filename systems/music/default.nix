@@ -5,8 +5,6 @@
 		./hardware.nix
 	];
 
-	networking.hostName = "music";
-
 	#### roon & plex
 	nixpkgs.overlays = lib.mkAfter [
 		(pkgfinal: pkgprev: {

@@ -5,8 +5,6 @@
 		./hardware.nix
 	];
 
-	networking.hostName = "yasamin"; # Define your hostname.
-
 	# mimic the old 22.11 hidpi settings (fontconfig & console settings)
 	fonts.fontconfig = {
 		# TODO: current recs say false for antialias, this is just a
