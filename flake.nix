@@ -16,7 +16,7 @@
 	};
 
 	outputs = { self, nixpkgs, nixos-hardware, nixpkgs-unstable, lanzaboote, ... }@attrs:
-		let 
+		let
 			system = "x86_64-linux";
 			overlay-unstable-with-sway = final: prev: {
 				unstable = import nixpkgs-unstable {
@@ -27,7 +27,16 @@
 				};
 			};
 
-			mkSystem = { name, userFacing, uefi, modules ? [], extra ? {} }: nixpkgs.lib.nixosSystem {
+			mkSystem = {
+				name,
+
+				userFacing,
+				uefi ? true,
+				networkmanager ? true,
+
+				modules ? [],
+				extra ? {}
+			}: nixpkgs.lib.nixosSystem {
 				inherit system;
 				modules = [
 					./modules/utils/allowedUnfree-polyfill.nix
@@ -39,13 +48,14 @@
 					./modules/user-facing
 				] ++ nixpkgs.lib.optionals (uefi) [
 					./modules/uefi
+				] ++ nixpkgs.lib.optionals (networkmanager) [
+					({ ... }: { networking.networkmanager.enable = true; })
 				];
 			} // extra;
 		in rec {
 			# yasamin
 			nixosConfigurations.yasamin = mkSystem {
 				name = "yasamin";
-				uefi = true;
 				userFacing = true;
 				modules = [
 					nixos-hardware.nixosModules.lenovo-thinkpad-x1-9th-gen
@@ -69,7 +79,6 @@
 			nixosConfigurations.music = mkSystem {
 				name = "music";
 				userFacing = false;
-				uefi = true;
 			};
 		};
 }
