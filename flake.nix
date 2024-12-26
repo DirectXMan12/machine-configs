@@ -30,37 +30,36 @@
 			mkSystem = {
 				name,
 
-				userFacing,
-				uefi ? true,
-				networkmanager ? true,
-
 				modules ? [],
-				extra ? {}
+				extra ? {},
+				cfg ? {},
 			}: nixpkgs.lib.nixosSystem {
 				inherit system;
 				modules = [
 					./modules/utils/allowedUnfree-polyfill.nix
 					./modules/common
+					./modules/user-facing
 					./systems/${name}
 					({ ... }: { networking.hostName = name; })
-				] ++ modules ++ nixpkgs.lib.optionals (userFacing) [
-					# make pkgs.unstable available in modules
-					({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-unstable-with-sway ]; })
-					./modules/user-facing
-				] ++ nixpkgs.lib.optionals (uefi) [
-					./modules/uefi
-				] ++ nixpkgs.lib.optionals (networkmanager) [
-					({ ... }: { networking.networkmanager.enable = true; })
-				];
+					({ config, pkgs, lib, ... }: {
+						config = lib.mkIf config.local.userFacing {
+							# make pkgs.unstable available in modules
+							nixpkgs.overlays = [ overlay-unstable-with-sway ];
+						};
+					})
+					({ ... }: cfg)
+				] ++ modules;
 			} // extra;
 		in rec {
 			# yasamin
 			nixosConfigurations.yasamin = mkSystem {
 				name = "yasamin";
-				userFacing = true;
 				modules = [
 					nixos-hardware.nixosModules.lenovo-thinkpad-x1-9th-gen
 				];
+				cfg = {
+					local.userFacing = true;
+				};
 			};
 			nixosConfigurations.yasamin-print = nixosConfigurations.yasamin // {
 				modules = nixpkgs.lib.mkAfter [
@@ -79,7 +78,9 @@
 			# music.devices
 			nixosConfigurations.music = mkSystem {
 				name = "music";
-				userFacing = false;
+				cfg = {
+					local.userFacing = false;
+				};
 			};
 		};
 }
