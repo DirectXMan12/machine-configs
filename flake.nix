@@ -10,7 +10,7 @@
 			inputs.nixpkgs.follows = "nixpkgs";
 		};
 		nixpkgs-wayland.url = "github:nix-community/nixpkgs-wayland";
-		nixos-sbc.url = "github:directxman12/nixos-sbc/main";
+		nixos-sbc.url = "github:nakato/nixos-sbc/main";
 
 		nixpkgs-wayland.inputs.nixpkgs.follows = "nixpkgs-unstable";
 		nixos-sbc.inputs.nixpkgs.follows = "nixpkgs-unstable";

@@ -237,15 +237,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1735102478,
-        "narHash": "sha256-1SK73VVNLyvIMf6FIQUTycv3aoH3frol7tKU1gP2Y8Q=",
-        "owner": "directxman12",
+        "lastModified": 1735186792,
+        "narHash": "sha256-XIIf8bU1khErw+dm66CdtHKQUGTMXuARWx08FtGNjqo=",
+        "owner": "nakato",
         "repo": "nixos-sbc",
-        "rev": "0fd1ceaf2c797eead3c3f80afa3dd131ee6c86ed",
+        "rev": "0f6fe1d77b3fc2198aabf76453f0a5159c9835c5",
         "type": "github"
       },
       "original": {
-        "owner": "directxman12",
+        "owner": "nakato",
         "ref": "main",
         "repo": "nixos-sbc",
         "type": "github"
