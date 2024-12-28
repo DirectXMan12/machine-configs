@@ -41,6 +41,7 @@
 					./modules/utils/allowedUnfree-polyfill.nix
 					./modules/common
 					./modules/user-facing
+					./modules/cache
 					./systems/${name}
 					({ ... }: { networking.hostName = name; })
 					({ config, pkgs, lib, ... }: {
@@ -98,6 +99,7 @@
 					local.userFacing = false;
 					local.uefi = false;
 					local.networking = "systemd";
+					local.cache.enable = true;
 				};
 			};
 		};
