@@ -17,6 +17,15 @@
 	};
 	networking.hostName = "sanctuary-router";
 
+	boot.kernelPatches = [
+		{
+			patch = null;
+			extraStructuredConfig = with lib.kernel; {
+				WIREGUARD = module;
+			};
+		}
+	];
+
 	# TODO: wireguard
 	# TODO: dhcp-v4
 	# TODO: ipv6 networking check?
