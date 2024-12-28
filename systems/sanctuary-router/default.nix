@@ -3,7 +3,6 @@
 {
 	imports = [
 		./routing-and-firewall.nix
-		./kernel-config.nix
 	];
 	sbc = {
 		version = "0.3";
