@@ -34,7 +34,8 @@
 				modules ? [],
 				extra ? {},
 				cfg ? {},
-			}: nixpkgs.lib.nixosSystem {
+				unstable ? false,
+			}: (if unstable then nixpkgs-unstable else nixpkgs).lib.nixosSystem {
 				inherit system;
 				modules = [
 					./modules/utils/allowedUnfree-polyfill.nix
@@ -87,6 +88,7 @@
 			# sanctuary-router
 			nixosConfigurations.sanctuary-router = mkSystem {
 				name = "sanctuary-router";
+				unstable = true;
 				modules = [
 						nixos-sbc.nixosModules.default
 						nixos-sbc.nixosModules.boards.bananapi.bpir4
