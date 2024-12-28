@@ -22,7 +22,8 @@ with lib;
 	};
 
 	# TODO: refactor this into a separate module
-	config = mkIf (config.local.networking == "networkmanager") {
-		networking.networkmanager.enable = true;
+	config = {
+		networking.networkmanager.enable = config.local.networking == "networkmanager";
+		systemd.network.enable = config.local.networking == "systemd";
 	};
 }
