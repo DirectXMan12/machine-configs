@@ -42,6 +42,7 @@
 					./modules/common
 					./modules/user-facing
 					./modules/cache
+					./modules/router
 					./systems/${name}
 					({ ... }: { networking.hostName = name; })
 					({ config, pkgs, lib, ... }: {

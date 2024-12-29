@@ -4,14 +4,6 @@
 	imports = [
 		./custom-bind.nix
 	];
-	# tell the kernel that it's okay to forward traffic,
-	# cause this is an essential function of a router
-	boot.kernel = {
-		sysctl = {
-			"net.ipv4.conf.all.forwarding" = true;
-			"net.ipv6.conf.all.forwarding" = true;
-		};
-	};
 
 	# TODO: missing wireguard support from the kernel, will need to rebuild
 
@@ -40,7 +32,14 @@
 				matchConfig.Name = "sfp1";
 				networkConfig = {
 					DHCP = "ipv4";
+
+					# accept router advertisements from my isp
 					IPv6AcceptRA = true;
+
+					# tell the kernel that it's okay to forward traffic,
+					# cause this is an essential function of a router
+					IPv6Forwarding = true;
+					IPv4Forwarding = true;
 				};
 				linkConfig.RequiredForOnline = "routable";
 			};
@@ -246,11 +245,38 @@
 		# we'll configure this per-interface above in systemd.network
 		useDHCP = false;
 
-		# TODO: should we disable firewall?
-		# TODO: nat settings (does this go through firewall?  it might be too simple, consider nixos-nftables-firewall)
+		# we'll use the nixos firewall for now -- it's nftables enabled now, and should be sufficient
+		nat = {
+			enable = true;
+			# TODO: [destiny ports](https://help.bungie.net/hc/en-us/articles/360049496751-Advanced-Troubleshooting-UPnP-Port-Forwarding-and-NAT-Types)
+			# outbound destiny: 1.2/32:* via wan, 1.2/32:udp/{3097,3074} via wan to udp (also for tekken?) 
+
+			# isakmp??
+
+			# wan:tcp:30000 --> 1.2:30000 (??)
+			# wan:tcp:55000 --> music[192.168.1.5]:55000 (roon arc port punch)
+			# wan:tcp:32400 --> music:32400 (plex port punch)
+
+		};
+
+		firewall = {
+			# wireguard
+
+			# block private networks?
+
+			# allow lan to any
+			# allow wlan to any
+			# figure out iot rules (for now allo to any)
+		};
 
 		nftables = {
 			enable = true;
+
+			# TODO: flow offloading
 		};
 	};
+
+	# wireguard: 10.6.210.1
+	# peers: 10.6.210.2 -- yasamin
+	# peers: 10.6.210.3 -- phone
 }

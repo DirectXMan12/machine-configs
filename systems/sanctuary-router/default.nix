@@ -2,7 +2,8 @@
 
 {
 	imports = [
-		./routing-and-firewall.nix
+		#./routing-and-firewall.nix
+		./routing-and-firewall.redux.nix
 	];
 	sbc = {
 		version = "0.3";
