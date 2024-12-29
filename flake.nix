@@ -42,7 +42,6 @@
 					./modules/common
 					./modules/user-facing
 					./modules/cache
-					./modules/router
 					./systems/${name}
 					({ ... }: { networking.hostName = name; })
 					({ config, pkgs, lib, ... }: {
@@ -95,6 +94,7 @@
 						nixos-sbc.nixosModules.default
 						nixos-sbc.nixosModules.boards.bananapi.bpir4
 						nixos-sbc.nixosModules.cache
+						./modules/router
 				];
 				cfg = {
 					local.userFacing = false;

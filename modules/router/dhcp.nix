@@ -12,14 +12,14 @@ let
 	in
 		lib.lists.flatten allAddrs;
 	
-	hasDynDNS = length dhcpDynDNSAddrs > 0;
+	hasDynDNS = builtins.length dhcpDynDNSAddrs > 0;
 in
 	{
-		options.dhcp = {
+		options.router.dhcp = {
 			enable = lib.mkEnableOption "DHCP server";
 		};
 
-		config = {
+		config = with lib; {
 			# TODO: reservations vs pool checks
 			services.kea = mkIf cfg.dhcp.enable {
 				dhcp-ddns = {
@@ -28,12 +28,12 @@ in
 					# same subnet name (so allocating subnet ids or something?)
 					enable = hasDynDNS;
 					settings = {
-						forward-dns.ddns-domains = lists.map (addr: {
-							name = addr.domainName;
-							dns-servers = [{ ip-address = "127.0.0.1" }];
+						forward-dns.ddns-domains = builtins.map (addr: {
+							name = addr.v4.dhcp.domainName;
+							dns-servers = [{ ip-address = "127.0.0.1"; }];
 						}) dhcpDynDNSAddrs;
 
-						reverse-dns.ddns-domains = libs.map (addr: {
+						reverse-dns.ddns-domains = builtins.map (addr: {
 							# TODO: ipv6 (ipv6.arpa, different split)
 							name = let
 								split = lib.strings.splitString "." addr.address;
@@ -41,7 +41,7 @@ in
 								reversedStr = lib.strings.concatStringsSep "." reversed;
 							in
 								"${reversedStr}.in-addr.arpa";
-							dns-servers = [{ ip-address = "127.0.0.1" }];
+							dns-servers = [{ ip-address = "127.0.0.1"; }];
 						}) dhcpDynDNSAddrs;
 					};
 				};
@@ -76,7 +76,7 @@ in
 								{ name = "domain-name-servers"; data = addr.address; }
 							] ++ (optional (length addr.v4.dhcp.searchPath > 0) {
 									name = "domain-search";
-									data = lib.lists.concatStringsSep ", " addr.v4.dhcp.searchPath;
+									data = lib.strings.concatStringsSep ", " addr.v4.dhcp.searchPath;
 								});
 							reservations = addr.v4.dhcp.reservations;
 						} // addr.v4.dhcp.extraConfig) iface.addresses) dhcpServerFaces);

@@ -128,6 +128,7 @@ in
 	{
 		imports = [
 			./dhcp.nix
+			./dns.nix
 		];
 		options.router = with lib; {
 			enable = mkEnableOption "router functionality";
