@@ -1,5 +1,4 @@
 table inet filter {
-	# see also whois.ripe.net fltr-martian (and fltr-martian-v6)
 	set lan_addrs {
 		type ipv4_addr;
 		flags interval;
@@ -12,9 +11,11 @@ table inet filter {
 		type ipv4_addr;
 		flags interval;
 	};
+	# see also whois.ripe.net fltr-martian (and fltr-martian-v6)
 	set v4_martians {
 		type ipv4_addr;
 		flags constant, interval;
+		auto-merge;
 		elements = {
 			0.0.0.0/8, 10.0.0.0/8, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12,
 			192.0.0.0/24, 192.0.2.0/24, 224.0.0.0/3, 192.168.0.0/16, 198.18.0.0/15,
@@ -24,12 +25,36 @@ table inet filter {
 	set v6_martians {
 		type ipv6_addr;
 		flags constant, interval;
+		auto-merge;
 		elements = {
-			0000::/8, 0064:ff9b::/96, 0100::/8, 0200::/7, 0400::/6, 0800::/5,
-			1000::/4, 2001::/32, 2001:0002::/48, 2001:0003::/32, 2001:10::/28,
-			2001:20::/28, 2001:db8::/32, 2002::/16, 3ffe::/16, 4000::/3, 5f00::/8,
-			6000::/3, 8000::/3, a000::/3, c000::/3, e000::/4, f000::/5, f800::/6,
-			fc00::/7, fe80::/10, fec0::/10, ff00::/8
+			0000::/8,
+			0064:ff9b::/96,
+			0100::/8,
+			0200::/7,
+			0400::/6,
+			0800::/5,
+			1000::/4,
+			2001::/32,
+			2001:0002::/48,
+			2001:0003::/32,
+			2001:10::/28,
+			2001:20::/28,
+			2001:db8::/32,
+			2002::/16,
+			3ffe::/16,
+			4000::/3,
+			5f00::/8,
+			6000::/3,
+			8000::/3,
+			a000::/3,
+			c000::/3,
+			e000::/4,
+			f000::/5,
+			f800::/6,
+			fc00::/7,
+			fe80::/10,
+			fec0::/10,
+			ff00::/8
 		};
 	};
 
@@ -37,10 +62,10 @@ table inet filter {
 	# TODO: antilockout rule (allow ssh from lan, explicitly, at high priority, don't follow other rules)
 
 	# enable flow offloading for better throughput
-	flowtable mainflow {
-		hook ingress priority 0;
-		devices = { spf0, spf1 };
-	}
+	# flowtable mainflow {
+	# 	hook ingress priority 0;
+	# 	devices = { spf0, spf1 };
+	# }
 
 	# anything leaving the router
 	chain output {
@@ -57,10 +82,10 @@ table inet filter {
 
 		# allow wireless and wired clients to access
 		# the router, but not iot
-		saddr @lan_addrs counter accept;
-		saddr @wlan_addrs counter accept;
+		ip saddr @lan_addrs counter accept;
+		ip saddr @wlan_addrs counter accept;
 		# only manually list this to get a counter
-		saddr @iot_addrs counter drop;
+		ip saddr @iot_addrs counter drop;
 
 		# allow established traffic in from the outside, but nothing else
 		iifname "spf0" ct state { established, related } counter accept;
@@ -80,7 +105,7 @@ table inet filter {
 		type filter hook forward priority filter; policy drop;
 
 		# plug in our flow offloading
-		ip protocol { tcp, udp } flow offload @mainflow;
+		# ip protocol { tcp, udp } flow offload @mainflow;
 
 		# allow all vlans to access the internet
 		# TODO: restrict iot stuff
@@ -113,7 +138,7 @@ table ip nat {
 
 		# TODO: is this randomized?
 		# auto (randomized??) snat anything heading out on ipv4
-		ofiname "spf0" masquerade;
+		oifname "spf0" masquerade;
 
 		# custom snat
 		# TODO: automatic snat from pfsense
