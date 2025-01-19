@@ -1,0 +1,121 @@
+table inet filter {
+	# see also whois.ripe.net fltr-martian (and fltr-martian-v6)
+	set lan_addrs {
+		type ipv4_addr;
+		flags interval;
+	};
+	set wlan_addrs {
+		type ipv4_addr;
+		flags interval;
+	};
+	set iot_addrs {
+		type ipv4_addr;
+		flags interval;
+	};
+	set v4_martians {
+		type ipv4_addr;
+		flags constant, interval;
+		elements = {
+			0.0.0.0/8, 10.0.0.0/8, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12,
+			192.0.0.0/24, 192.0.2.0/24, 224.0.0.0/3, 192.168.0.0/16, 198.18.0.0/15,
+			198.51.100.0/24, 203.0.113.0/24
+		};
+	};
+	set v6_martians {
+		type ipv6_addr;
+		flags constant, interval;
+		elements = {
+			0000::/8, 0064:ff9b::/96, 0100::/8, 0200::/7, 0400::/6, 0800::/5,
+			1000::/4, 2001::/32, 2001:0002::/48, 2001:0003::/32, 2001:10::/28,
+			2001:20::/28, 2001:db8::/32, 2002::/16, 3ffe::/16, 4000::/3, 5f00::/8,
+			6000::/3, 8000::/3, a000::/3, c000::/3, e000::/4, f000::/5, f800::/6,
+			fc00::/7, fe80::/10, fec0::/10, ff00::/8
+		};
+	};
+
+	# TODO: antispoof (internal from a source claiming to be the interface ip)
+	# TODO: antilockout rule (allow ssh from lan, explicitly, at high priority, don't follow other rules)
+
+	# enable flow offloading for better throughput
+	flowtable mainflow {
+		hook ingress priority 0;
+		devices = { spf0, spf1 };
+	}
+
+	# anything leaving the router
+	chain output {
+		# allow things going out by default
+		type filter hook output priority 100; policy accept;
+	}
+
+	# input to the router (i.e. not forwarding)
+	chain input {
+		# drop things by default coming in
+		type filter hook input priority filter; policy drop;
+
+		# TODO: be more specific around ports here?
+
+		# allow wireless and wired clients to access
+		# the router, but not iot
+		saddr @lan_addrs counter accept;
+		saddr @wlan_addrs counter accept;
+		# only manually list this to get a counter
+		saddr @iot_addrs counter drop;
+
+		# allow established traffic in from the outside, but nothing else
+		iifname "spf0" ct state { established, related } counter accept;
+		iifname "spf0" drop;
+		
+		# TODO: i think we need something special for ipv6 
+
+		# TODO: avahi/mdns
+	}
+
+	# TODO: block bogon networks
+	# TODO: allow inter-vlan communication?
+	# TODO: explicitly allow icmp v4 & v6
+
+	# ok, now the stuff for actually acting as a router
+	chain forward {
+		type filter hook forward priority filter; policy drop;
+
+		# plug in our flow offloading
+		ip protocol { tcp, udp } flow offload @mainflow;
+
+		# allow all vlans to access the internet
+		# TODO: restrict iot stuff
+		iifname { "sfp1" } oifname { "spf0" } counter accept comment "allow any internal --> wan";
+
+		# allow established traffic back in
+		iifname { "sfp0" } oifname { "spf1" } ct state { established, related } counter accept comment "allow established stuff back internally";
+
+		# TODO: i think we need something special for ipv6 icmp?
+		# TODO: avahi/mdns
+	}
+}
+
+# only do nat on ipv4
+table ip nat {
+	# dnat
+	chain prerouting {
+		type nat hook prerouting priority dstnat; policy accept;
+
+		# custom port forwards
+		# TODO: figure out syntax
+		# ip protocol tcp dport 30000 counter forward to @custompc_addr comment "??";
+		# ip protocol tcp dport 55000 counter forward to @music_addr comment "roon arc --> music";
+		# ip protocol tcp dport 32400 counter forward to @music_addr comment "plex --> music";
+	}
+
+	# snat
+	chain postrouting {
+		type nat hook postrouting priority srcnat; policy accept;
+
+		# TODO: is this randomized?
+		# auto (randomized??) snat anything heading out on ipv4
+		ofiname "spf0" masquerade;
+
+		# custom snat
+		# TODO: automatic snat from pfsense
+	}
+}

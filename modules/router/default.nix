@@ -24,7 +24,11 @@ let
 			"${if isVlan name iface then "40" else "30"}-${name}-${iface.type}" = { 
 				matchConfig.Name = name;
 				vlan = lib.lists.map vlanDevName iface.vlans;
-				address = lib.lists.map (addr: addr.address) iface.addresses;
+				addresses = lib.lists.map (addr: {
+					Address = addr.address;
+					NFTSet = "prefix:inet:filter:${addr.alias}_addrs";
+
+				}) iface.addresses;
 			};
 		};
 	toVlan = name: iface: {
@@ -70,6 +74,7 @@ let
 				# TODO: parse address to check
 				type = types.listOf (types.submodule {
 					options = {
+						alias = mkOption { type = types.str; };
 						address = mkOption { type = types.str; };
 						mask = mkOption { type = types.int; };
 						v4 = {
@@ -129,6 +134,7 @@ in
 		imports = [
 			./dhcp.nix
 			./dns.nix
+			./firewall.nix
 		];
 		options.router = with lib; {
 			enable = mkEnableOption "router functionality";
@@ -209,10 +215,6 @@ in
 				# we'll configure our own
 				nat.enable = false;
 				firewall.enable = false;
-
-				nftables = {
-					enable = true;
-				};
 			};
 		});
 	}
