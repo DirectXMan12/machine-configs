@@ -118,6 +118,13 @@ table inet filter {
 
 		# allow established traffic back in
 		iifname { "sfp-wan" } oifname { "sfp-lan", "wlan-vlan", "iot-vlan" } ct state { established, related } counter accept comment "allow established stuff back internally";
+		
+		# allow trusted traffic between subnets
+		iifname { "sfp-lan", "wlan-vlan" } oifname { "sfp-lan", "wlan-vlan", "iot-vlan" } counter accept comment "allow trusted <--> any internal";
+		iifname { "iot-vlan" } oifname { "sfp-lan", "wlan-vlan" } ct state { established, related } counter accept comment "iot (established) --> internal subnets";
+
+		# allow dnat stuff through
+		ct status dnat counter accept;
 
 		# TODO: i think we need something special for ipv6 icmp?
 		# TODO: avahi/mdns
@@ -137,10 +144,10 @@ table ip nat {
 		# ip protocol tcp dport 30000 counter forward to @custompc_addr comment "??";
 		# ip protocol tcp dport 55000 counter forward to @music_addr comment "roon arc --> music";
 		# ip protocol tcp dport 32400 counter forward to @music_addr comment "plex --> music";
-		iifname { "sfp-wan" } udp dport 3478 dnat to 192.168.1.5 comment "unifi remote mgmt (STUN)";
-		iifname { "sfp-wan" } tcp dport 8080 dnat to 192.168.1.5 comment "unifi remote mgmt (web)";
-		iifname { "sfp-wan" } tcp dport 8443 dnat to 192.168.1.5 comment "unifi remote mgmt (web)";
-		iifname { "sfp-wan" } tcp dport 6789 dnat to 192.168.1.5 comment "unifi remote mgmt (speed test)";
+		# iifname { "sfp-wan" } udp dport 3478 counter dnat to 192.168.1.5 comment "unifi remote mgmt (STUN)";
+		# iifname { "sfp-wan" } tcp dport 8080 counter dnat to 192.168.1.5 comment "unifi remote mgmt (web)";
+		# iifname { "sfp-wan" } tcp dport 8443 counter dnat to 192.168.1.5 comment "unifi remote mgmt (web)";
+		# iifname { "sfp-wan" } tcp dport 6789 counter dnat to 192.168.1.5 comment "unifi remote mgmt (speed test)";
 		# other ports for unifi guest hotspot, but not using
 	}
 

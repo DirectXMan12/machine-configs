@@ -75,22 +75,35 @@ let
         };
       };
   rootZones = {
+    # TODO: hickory-dns has a bug (github:hickory-dns/hickory-dns#2788) that causes
+    # recursive resolution to fail on some stuff.  fall back to google dns
     "." = {
       type = "external";
-      stores = [{
-        recursor = { 
-          roots = ./root.zone;
-          ns_cache_size = 1024;
-          record_cache_size = 1048576;
-          recursion_limit = 12;
-          ns_recursion_limit = 16;
-          cache_policy = {
-            default.positive_max_ttl = 86400;
-            A.positive_max_ttl = 3600;
-            AAAA.positive_max_ttl = 3600;
+      stores = [
+        # {
+        #   recursor = { 
+        #     roots = ./root.zone;
+        #     ns_cache_size = 1024;
+        #     record_cache_size = 1048576;
+        #     recursion_limit = 12;
+        #     ns_recursion_limit = 16;
+        #     cache_policy = {
+        #       default.positive_max_ttl = 86400;
+        #       A.positive_max_ttl = 3600;
+        #       AAAA.positive_max_ttl = 3600;
+        #     };
+        #   };
+        # }
+        {
+          forward = {
+            name_servers = [{
+              socket_addr = "8.8.8.8:53";
+              protocol = "udp";
+              trust_negative_responses = false;
+            }];
           };
-        };
-      }];
+        }
+      ];
     };
   };
   cfgForStore = stores: builtins.head (lib.attrsets.mapAttrsToList (name: store: {
@@ -197,7 +210,19 @@ let
   forwardOptions = with lib; mkOption {
     type = types.submodule {
       options = {
-        # TODO: define these
+        name_servers = mkOption {
+          type = types.listOf (types.submodule {
+            options = {
+              socket_addr = mkOption { type = types.str; };
+              protocol = mkOption { type = types.enum ["tcp" "udp" "tls" "quic" "https" "h3"]; };
+              trust_negative_responses = mkOption { type = types.nullOr types.bool; default = null; };
+              # TODO: make removeNulls work with lists
+              # tls_dns_name = mkOption { type = types.nullOr types.str; default = null; };
+              # http_endpoint = mkOption { type = types.nullOr types.str; default = null; };
+              # bind_addr = mkOption { type = types.nullOr types.str; default = null; };
+             };
+          });
+        };
         extraConfig = mkOption { type = types.attrsOf toml.type; default = {}; };
       };
     };
@@ -289,6 +314,7 @@ in
 
       # hickory handles this
       services.resolved.enable = false;
+
       services.hickory-dns = {
         enable = true;
         settings = {};

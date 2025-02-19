@@ -24,7 +24,7 @@ in
 				zones = {
 					# add in blocklists
 					"." = {
-						stores = lib.mkAfter [{
+						stores = lib.mkBefore [{
 							blocklist = {
 								# TODO: fix hickory dns to avoid this issue, but for now this has to be relative
 								lists = ["../../../../${hageziLight}"];
