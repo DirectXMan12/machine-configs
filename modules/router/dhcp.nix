@@ -74,6 +74,7 @@ in
 							option-data = [
 								# TODO: allow for custom dns
 								{ name = "domain-name-servers"; data = addr.address; }
+								{ name = "routers"; data = addr.address; }
 							] ++ (optional (length addr.v4.dhcp.searchPath > 0) {
 									name = "domain-search";
 									data = lib.strings.concatStringsSep ", " addr.v4.dhcp.searchPath;

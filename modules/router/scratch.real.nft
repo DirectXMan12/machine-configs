@@ -103,6 +103,7 @@ table inet filter {
 	# TODO: allow inter-vlan communication?
 	# TODO: explicitly allow icmp v4 & v6
 	# TODO: set for sfp names
+	# TODO: rate limit pings
 
 	# ok, now the stuff for actually acting as a router
 	chain forward {
@@ -113,13 +114,14 @@ table inet filter {
 
 		# allow all vlans to access the internet
 		# TODO: restrict iot stuff
-		iifname { "sfp-lan" } oifname { "sfp-wan" } counter accept comment "allow any internal --> wan";
+		iifname { "sfp-lan", "wlan-vlan", "iot-vlan" } oifname { "sfp-wan" } counter accept comment "allow any internal --> wan";
 
 		# allow established traffic back in
-		iifname { "sfp-wan" } oifname { "sfp-lan" } ct state { established, related } counter accept comment "allow established stuff back internally";
+		iifname { "sfp-wan" } oifname { "sfp-lan", "wlan-vlan", "iot-vlan" } ct state { established, related } counter accept comment "allow established stuff back internally";
 
 		# TODO: i think we need something special for ipv6 icmp?
 		# TODO: avahi/mdns
+		counter drop;
 	}
 }
 
@@ -131,9 +133,15 @@ table ip nat {
 
 		# custom port forwards
 		# TODO: figure out syntax
+		# TODO: sets for these addresses?
 		# ip protocol tcp dport 30000 counter forward to @custompc_addr comment "??";
 		# ip protocol tcp dport 55000 counter forward to @music_addr comment "roon arc --> music";
 		# ip protocol tcp dport 32400 counter forward to @music_addr comment "plex --> music";
+		iifname { "sfp-wan" } udp dport 3478 dnat to 192.168.1.5 comment "unifi remote mgmt (STUN)";
+		iifname { "sfp-wan" } tcp dport 8080 dnat to 192.168.1.5 comment "unifi remote mgmt (web)";
+		iifname { "sfp-wan" } tcp dport 8443 dnat to 192.168.1.5 comment "unifi remote mgmt (web)";
+		iifname { "sfp-wan" } tcp dport 6789 dnat to 192.168.1.5 comment "unifi remote mgmt (speed test)";
+		# other ports for unifi guest hotspot, but not using
 	}
 
 	# snat

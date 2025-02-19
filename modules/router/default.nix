@@ -26,7 +26,7 @@ let
 				matchConfig.Name = name;
 				vlan = lib.lists.map vlanDevName iface.vlans;
 				addresses = lib.lists.map (addr: {
-					Address = addr.address;
+					Address = "${addr.address}/${toString addr.mask}";
 					NFTSet = "prefix:inet:filter:${addr.alias}_addrs";
 
 				}) iface.addresses;
@@ -34,8 +34,8 @@ let
 					# TODO: support per-type configuration properly
 					DHCP = lib.mkIf (iface.type == "wan") "ipv4";
 					IPv6AcceptRA = iface.type == "wan";
-					IPv4Forwarding = iface.type == "wan";
-					IPv6Forwarding = iface.type == "wan";
+					IPv4Forwarding = true;
+					IPv6Forwarding = true;
 				};	
 			};
 		};
