@@ -16,7 +16,8 @@ let
 		let
 			iface = cfg.interfaces."${name}";
 		in
-			"vlan${toString iface.vlan.id}-${name}";
+			# "vlan${toString iface.vlan.id}-${name}";
+			name;
 	toNetwork = name: baseIface: let
 		iface = cfg.perTypeConfiguration."${baseIface.type}" // baseIface;
 	in
@@ -29,6 +30,13 @@ let
 					NFTSet = "prefix:inet:filter:${addr.alias}_addrs";
 
 				}) iface.addresses;
+				networkConfig = {
+					# TODO: support per-type configuration properly
+					DHCP = lib.mkIf (iface.type == "wan") "ipv4";
+					IPv6AcceptRA = iface.type == "wan";
+					IPv4Forwarding = iface.type == "wan";
+					IPv6Forwarding = iface.type == "wan";
+				};	
 			};
 		};
 	toVlan = name: iface: {
@@ -114,11 +122,11 @@ let
 			};
 
 			v4 = {
-				dhcp = mkOption { type = types.bool; default = true; };
+				dhcp = mkOption { type = types.bool; default = false; };
 				forwarding = mkOption { type = types.bool; default = true; };
 			};
 			v6 = {
-				acceptRA = mkOption { type = types.bool; default = true; };
+				acceptRA = mkOption { type = types.bool; default = false; };
 				forwarding = mkOption { type = types.bool; default = true; };
 			};
 			# TODO: this

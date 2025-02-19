@@ -64,7 +64,7 @@ table inet filter {
 	# enable flow offloading for better throughput
 	# flowtable mainflow {
 	# 	hook ingress priority 0;
-	# 	devices = { spf0, spf1 };
+	# 	devices = { sfp-wan, sfp-lan };
 	# }
 
 	# anything leaving the router
@@ -87,9 +87,12 @@ table inet filter {
 		# only manually list this to get a counter
 		ip saddr @iot_addrs counter drop;
 
+		# allow loopback traffic
+		iifname "lo" accept;
+
 		# allow established traffic in from the outside, but nothing else
-		iifname "spf0" ct state { established, related } counter accept;
-		iifname "spf0" drop;
+		iifname "sfp-wan" ct state { established, related } counter accept;
+		iifname "sfp-wan" drop;
 		
 		# TODO: i think we need something special for ipv6 
 
@@ -99,6 +102,7 @@ table inet filter {
 	# TODO: block bogon networks
 	# TODO: allow inter-vlan communication?
 	# TODO: explicitly allow icmp v4 & v6
+	# TODO: set for sfp names
 
 	# ok, now the stuff for actually acting as a router
 	chain forward {
@@ -109,10 +113,10 @@ table inet filter {
 
 		# allow all vlans to access the internet
 		# TODO: restrict iot stuff
-		iifname { "sfp1" } oifname { "spf0" } counter accept comment "allow any internal --> wan";
+		iifname { "sfp-lan" } oifname { "sfp-wan" } counter accept comment "allow any internal --> wan";
 
 		# allow established traffic back in
-		iifname { "sfp0" } oifname { "spf1" } ct state { established, related } counter accept comment "allow established stuff back internally";
+		iifname { "sfp-wan" } oifname { "sfp-lan" } ct state { established, related } counter accept comment "allow established stuff back internally";
 
 		# TODO: i think we need something special for ipv6 icmp?
 		# TODO: avahi/mdns
@@ -138,7 +142,7 @@ table ip nat {
 
 		# TODO: is this randomized?
 		# auto (randomized??) snat anything heading out on ipv4
-		oifname "spf0" masquerade;
+		oifname "sfp-wan" masquerade;
 
 		# custom snat
 		# TODO: automatic snat from pfsense

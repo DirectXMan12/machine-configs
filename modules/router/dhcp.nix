@@ -28,12 +28,12 @@ in
 					# same subnet name (so allocating subnet ids or something?)
 					enable = hasDynDNS;
 					settings = {
-						forward-dns.ddns-domains = builtins.map (addr: {
+						forward-ddns.ddns-domains = builtins.map (addr: {
 							name = addr.v4.dhcp.domainName;
 							dns-servers = [{ ip-address = "127.0.0.1"; }];
 						}) dhcpDynDNSAddrs;
 
-						reverse-dns.ddns-domains = builtins.map (addr: {
+						reverse-ddns.ddns-domains = builtins.map (addr: {
 							# TODO: ipv6 (ipv6.arpa, different split)
 							name = let
 								split = lib.strings.splitString "." addr.address;
@@ -63,7 +63,7 @@ in
 							enable-updates = hasDynDNS;
 						};
 
-						subnet4 = lists.flatten (attrsets.mapAttrsToList (name: iface: lists.map (addr: {
+						subnet4 = lists.imap1 (id: subnet: subnet // { id = id; }) (lists.flatten (attrsets.mapAttrsToList (name: iface: lists.map (addr: {
 							# TODO: hash iface name & address set for id?
 							subnet = "${addr.address}/${toString addr.mask}";
 							ddns-send-updates = addr.v4.dhcp.dynDNS;
@@ -79,7 +79,7 @@ in
 									data = lib.strings.concatStringsSep ", " addr.v4.dhcp.searchPath;
 								});
 							reservations = addr.v4.dhcp.reservations;
-						} // addr.v4.dhcp.extraConfig) iface.addresses) dhcpServerFaces);
+						} // addr.v4.dhcp.extraConfig) iface.addresses) dhcpServerFaces));
 					};
 				};
 			};

@@ -26,7 +26,8 @@ in
 					"." = {
 						stores = lib.mkAfter [{
 							blocklist = {
-								lists = [hageziLight];
+								# TODO: fix hickory dns to avoid this issue, but for now this has to be relative
+								lists = ["../../../../${hageziLight}"];
 							};
 						}];
 					};
@@ -34,13 +35,13 @@ in
 			};
 
 			interfaces = {
-				"sfp0" = {
-					link.matchConfig.OriginalName = "eth1";
+				"sfp-wan" = {
+					link.matchConfig.OriginalName = "eth2";
 					type = "wan";
 				};
 
-				"sfp1" = {
-					link.matchConfig.OriginalName = "eth2";
+				"sfp-lan" = {
+					link.matchConfig.OriginalName = "eth1";
 					vlans = [ "wlan-vlan" "iot-vlan" ];
 					addresses = [{
 						address = "192.168.1.1";
