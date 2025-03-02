@@ -10,6 +10,7 @@ let
 		url = https://gitlab.com/hagezi/mirror/-/raw/main/dns-blocklists/domains/light.txt;
 		hash = "sha256-eVHvOHTOYIlAQ6N5mLioOYDtvhl/Qkd9/ut94UcOIps=";
 	};
+  musicAddr = "192.168.1.5";
 in
 	{
 		router = {
@@ -33,6 +34,38 @@ in
 					};
 				};
 			};
+
+      firewall = {
+        enable = true;
+        portForwards = [
+          {port = 55000; protocol = "tcp"; to = musicAddr; comment = "roon arc --> music";}
+          {port = 32400; protocol = "tcp"; to = musicAddr; comment = "plex --> music";}
+        ];
+        inetChains = {
+          input = ''
+            # allow trusted vlans access to the router
+            ip saddr @lan_addrs counter accept;
+            ip saddr @wlan_addrs counter accept;
+            # don't allow iot devices access to the router
+            ip saddr @iot_addrs counter drop;
+          '';
+          forward = ''
+            # plug in our flow offloading
+            # ip protocol { tcp, udp } flow offload @mainflow;
+
+            # allow all vlans to access the internet
+            # TODO: restrict iot stuff
+            iifname { "sfp-lan", "wlan-vlan", "iot-vlan" } oifname @wan_faces counter accept comment "allow any internal --> wan";
+
+            # allow established traffic back in
+            iifname @wan_faces oifname @lan_faces ct state { established, related } counter accept comment "allow established stuff back internally";
+            
+            # allow trusted traffic between subnets
+            iifname { "sfp-lan", "wlan-vlan" } oifname { "sfp-lan", "wlan-vlan", "iot-vlan" } counter accept comment "allow trusted <--> any internal";
+            iifname { "iot-vlan" } oifname { "sfp-lan", "wlan-vlan" } ct state { established, related } counter accept comment "iot (established) --> internal subnets";
+          '';
+        };
+      };
 
 			interfaces = {
 				"sfp-wan" = {
@@ -59,7 +92,7 @@ in
 								# .3 was xyrithes
 								{ hw-address = "0c:ea:14:1a:46:ab"; ip-address = "192.168.1.4"; hostname = "main-switch"; }
 								# music (wired)
-								{ hw-address = "54:b2:03:94:0d:30"; ip-address = "192.168.1.5"; hostname = "music"; }
+								{ hw-address = "54:b2:03:94:0d:30"; ip-address = musicAddr; hostname = "music"; }
 								# living room U7 Pro AP (on the lan)
 								{ hw-address = "28:70:4e:d5:38:83"; ip-address = "192.168.1.6"; hostname = "living-room-ap"; }
 							];

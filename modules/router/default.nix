@@ -27,8 +27,6 @@ let
 				vlan = lib.lists.map vlanDevName iface.vlans;
 				addresses = lib.lists.map (addr: {
 					Address = "${addr.address}/${toString addr.mask}";
-					NFTSet = "prefix:inet:filter:${addr.alias}_addrs";
-
 				}) iface.addresses;
 				networkConfig = {
 					# TODO: support per-type configuration properly
