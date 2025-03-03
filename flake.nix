@@ -94,6 +94,7 @@
 						nixos-sbc.nixosModules.default
 						nixos-sbc.nixosModules.boards.bananapi.bpir4
 						nixos-sbc.nixosModules.cache
+						./modules/router
 				];
 				cfg = {
 					local.userFacing = false;
