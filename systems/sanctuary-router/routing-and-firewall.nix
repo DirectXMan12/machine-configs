@@ -124,6 +124,7 @@ in
               domainName = "w.home.metamagical.dev";
               searchPath = ["home.metamagical.dev"];
               pools = { "192.168.2.100 - 192.168.2.245" = {}; };
+              dynDNS = true;
               reservations = [
                 # .3 was xyrithes
                 # music (wlan vlan via wired)

@@ -138,6 +138,11 @@ let
               allow_update = true;
             };
           }];
+          #keys = [{
+          #  key_path = /var/lib/kea/ddns-update-key.pk8;
+          #  algorithm = "Ed25519";
+          #  purpose = "ZoneUpdateAuth";
+          #}];
         };
       }
       (
@@ -274,6 +279,17 @@ let
         type = types.listOf storeOptions;
         default = [];
       };
+      keys = mkOption {
+        type = types.listOf (types.submodule {
+          options = {
+            key_path = mkOption { type = types.path; };
+            algorithm = mkOption { type = types.enum ["RSA" "DSA" "ECDSA" "Ed25519" "Ed448"]; };
+            signerName = mkOption { type = types.nullOr types.str; default = null; };
+            purpose = mkOption { type = types.enum ["ZoneSigning" "ZoneUpdateAuth"]; };
+          };
+        });
+        default = [];
+      };
       extraConfig = mkOption {
         type = types.attrsOf toml.type;
         default = {};
@@ -340,7 +356,7 @@ in
           cargoHash = "sha256-lBxCGR4/PrUJ0JLqBn/VzJY47Yp8M4TRsYfCsZN17Ek=";
           useFetchCargoVendor = true;
           buildInputs = [ pkgs.openssl ];
-          buildFeatures = [ "recursor" "blocklist" ];
+          buildFeatures = [ "recursor" "blocklist" "dnssec-ring" ];
           nativeBuildInputs = [ pkgs.pkg-config ];
           doCheck = false;
           meta.mainProgram = "hickory-dns";

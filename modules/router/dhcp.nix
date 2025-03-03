@@ -29,7 +29,7 @@ in
 					enable = hasDynDNS;
 					settings = {
 						forward-ddns.ddns-domains = builtins.map (addr: {
-							name = addr.v4.dhcp.domainName;
+							name = "${addr.v4.dhcp.domainName}.";
 							dns-servers = [{ ip-address = "127.0.0.1"; }];
 						}) dhcpDynDNSAddrs;
 
@@ -38,9 +38,9 @@ in
 							name = let
 								split = lib.strings.splitString "." addr.address;
 								reversed = lib.lists.reverseList split;
-								reversedStr = lib.strings.concatStringsSep "." reversed;
+								reversedStr = lib.strings.concatStringsSep "." (drop 1 reversed);
 							in
-								"${reversedStr}.in-addr.arpa";
+								"${reversedStr}.in-addr.arpa.";
 							dns-servers = [{ ip-address = "127.0.0.1"; }];
 						}) dhcpDynDNSAddrs;
 					};
