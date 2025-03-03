@@ -114,12 +114,12 @@ let
     soa = ''
       $TTL 3D
       @               IN      SOA     ${cfg.authority}. internal-dns.${cfg.authority}. (
-              199609203 ; Serial
-              28800     ; Refresh
-              7200      ; Retry
-              604800    ; Expire
-              86400)    ; Minimum TTL
-            NS      ${cfg.authority}.
+                                      199609203 ; Serial
+                                      28800     ; Refresh
+                                      7200      ; Retry
+                                      604800    ; Expire
+                                      86400)    ; Minimum TTL
+                              NS      ${cfg.authority}.
     '';
     # TODO: tsig and/or limit to coming from localhost
     zones = lists.concatMap (addr: [
@@ -130,32 +130,41 @@ let
           type = "primary";
           stores = [{
             sqlite = {
-              zone_file_path = pkgs.writeText "dyn-${addr.v4.dhcp.domainName}.zone" "${soa}";
+              zone_file_path = pkgs.writeText "dyn-${addr.v4.dhcp.domainName}.zone" ''
+                ${soa}
+                router                  A       ${addr.address}
+              '';
               journal_file_path = "dyn-${addr.v4.dhcp.domainName}.jrnl";
               allow_update = true;
             };
           }];
         };
       }
-      {
-        # reverse
-        name = let
+      (
+        let
           split = lib.strings.splitString "." addr.address;
           reversed = lib.lists.reverseList split;
-          reversedStr = lib.strings.concatStringsSep "." reversed;
+          lastAddrComponent = builtins.elemAt reversed 0;
+          arpaZone = lib.strings.concatStringsSep "." (drop 1 reversed);
         in
-          "${reversedStr}.in-addr.arpa";
-        value = {
-          type = "primary";
-          stores = [{
-            sqlite = {
-              zone_file_path = pkgs.writeText "dyn-rev-${addr.v4.dhcp.domainName}.zone" "${soa}";
-              journal_file_path = "dyn-rev-${addr.v4.dhcp.domainName}.jrnl";
-              allow_update = true;
+          {
+            # reverse
+            name = "${arpaZone}.in-addr.arpa";
+            value = {
+              type = "primary";
+              stores = [{
+                sqlite = {
+                  zone_file_path = pkgs.writeText "dyn-rev-${addr.v4.dhcp.domainName}.zone" ''
+                    ${soa}
+                    ${lastAddrComponent}                       PTR     router.${addr.v4.dhcp.domainName}.
+                  '';
+                  journal_file_path = "dyn-rev-${addr.v4.dhcp.domainName}.jrnl";
+                  allow_update = true;
+                };
+              }];
             };
-          }];
-        };
-      }
+          }
+      )
     ]) dhcpDynDNSAddrs;
   in 
     builtins.listToAttrs zones);

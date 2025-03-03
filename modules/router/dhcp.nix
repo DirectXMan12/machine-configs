@@ -62,6 +62,7 @@ in
 						dhcp-ddns = {
 							enable-updates = hasDynDNS;
 						};
+						ddns-update-on-renew = true;
 
 						subnet4 = lists.imap1 (id: subnet: subnet // { id = id; }) (lists.flatten (attrsets.mapAttrsToList (name: iface: lists.map (addr: {
 							# TODO: hash iface name & address set for id?
