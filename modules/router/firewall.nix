@@ -113,6 +113,19 @@ in
               # anything on the loopback
               iifname "lo" accept;
 
+              # TODO: config for this
+              iifname @wan_faces icmp type echo-request limit rate 20/second accept;
+              iifname @wan_faces icmpv6 type echo-request limit rate 20/second accept;
+
+              # allow common icmp stuff that's required for the internet to work
+              # (http://shouldiblockicmp.com/)
+              icmp type { echo-request, echo-reply, time-exceeded, destination-unreachable, parameter-problem } accept;
+              icmpv6 type { echo-request, echo-reply, packet-too-big, time-exceeded } accept;
+              icmpv6 type { nd-router-solicit, nd-router-advert, nd-neighbor-solicit,
+                            nd-neighbor-advert, nd-redirect, parameter-problem } counter accept comment "ipv6 slaac and ndp";
+              # allow dhcpv6
+              iifname @wan_faces ip6 daddr fe80::/64 udp dport 546 counter accept comment "dhcpv6";
+
               ${cfg.inetChains.input}
 
               # allow established traffic from the outside

@@ -14,6 +14,13 @@ let
   gamingPCAddr = "192.168.1.2";
 in
   {
+    # TODO: add an extraConfig.networkConfig to the interfaces section -- this naming is brittle
+    systemd.network.networks."30-switch0-lan".networkConfig = {
+      # don't bother to delegate a whole prefix to this, we're not using it
+      # i'm only leaving it open for debugging
+      # TODO: lib.mkDefault on these settings?
+      DHCPPrefixDelegation = lib.mkForce false;
+    };
     router = {
       enable = true;
 

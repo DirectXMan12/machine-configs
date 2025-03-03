@@ -21,7 +21,7 @@ let
 	toNetwork = name: baseIface: let
 		iface = cfg.perTypeConfiguration."${baseIface.type}" // baseIface;
 	in
-		iface.network // {
+		{
 			"${if isVlan name iface then "40" else "30"}-${name}-${iface.type}" = { 
 				matchConfig.Name = name;
 				vlan = lib.lists.map vlanDevName iface.vlans;
@@ -32,9 +32,17 @@ let
 					# TODO: support per-type configuration properly
 					DHCP = lib.mkIf (iface.type == "wan") "ipv4";
 					IPv6AcceptRA = iface.type == "wan";
+					IPv6SendRA = iface.type == "lan";
+					DHCPPrefixDelegation = lib.mkIf (iface.type == "lan") true;
 					IPv4Forwarding = true;
 					IPv6Forwarding = true;
 				};	
+				dhcpV6Config = lib.mkIf (iface.type == "wan") {
+					# seems to be the max comcast will give
+					# TODO: make this configurable
+					PrefixDelegationHint = "::/60";
+				};
+				# TODO: explicitly set uplink interface from wan interfaces via `UplinkInterface`?
 			};
 		};
 	toVlan = name: iface: {
@@ -64,12 +72,6 @@ let
 					};
 				});
 				default = null;
-			};
-			network = mkOption {
-				type = types.submodule {
-					options = {};
-				};
-				default = {};
 			};
 			vlans = mkOption {
 				# TODO: check that it refers to other interfaces
@@ -202,6 +204,14 @@ in
 				links = let
 					linkFaces = attrsets.filterAttrs isLink cfg.interfaces;
 				in attrsets.concatMapAttrs toLink linkFaces;
+
+				config.networkConfig = {
+					# :screaming-internally: ipv6 forwarding must be turned on at the
+					# system level in order for the per-network setting to have any
+					# effect (unlike ipv4, which doesn't need this) idk why the
+					# per-network setting doesn't imply the global setting in that case.
+					IPv6Forwarding = true;
+				};
 
 				networks = attrsets.concatMapAttrs toNetwork cfg.interfaces;
 				
