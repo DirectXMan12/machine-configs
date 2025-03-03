@@ -14,12 +14,6 @@ let
   gamingPCAddr = "192.168.1.2";
 in
   {
-    services.kea = {
-      # debug ddns
-      dhcp-ddns.settings.loggers = [
-        {name = "*"; severity = "DEBUG";}
-      ];
-    };
     router = {
       enable = true;
 

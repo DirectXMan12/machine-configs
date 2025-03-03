@@ -138,6 +138,7 @@ let
               allow_update = true;
             };
           }];
+          # TODO: fill this in once tsig support is in place
           #keys = [{
           #  key_path = /var/lib/kea/ddns-update-key.pk8;
           #  algorithm = "Ed25519";
