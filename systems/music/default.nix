@@ -9,11 +9,11 @@
 	nixpkgs.overlays = lib.mkAfter [
 		(pkgfinal: pkgprev: {
 			roon-server = pkgprev.roon-server.overrideAttrs (final: prev: {
-				version = "2.0-1438";
-				urlVersion = builtins.replaceStrings [ "." "-" ] [ "00" "0" ] final.version;
+				version = "2.47.1507";
+				urlVersion = builtins.replaceStrings [ "." ] [ "0" ] final.version;
 				src = pkgs.fetchurl {
 					url = "https://download.roonlabs.com/updates/earlyaccess/RoonServer_linuxx64_${final.urlVersion}.tar.bz2";
-					hash = "sha256-NzrEiJeUgoASH6yM1qZXR4lELIsUrKV6uRBpePpMcYU=";
+					hash = "sha256-LftrexhUTkrvVr/WKTVGF26kE7WxA1wN1uTl4rHMofk=";
 				};
 			});
 		})
@@ -48,6 +48,9 @@
 	allowedUnfree = lib.mkAfter [
 		"roon-server"
 		"plexmediaserver"
+		# temporary
+		"unifi-controller"
+		"mongodb-ce"
 	];
 
 	services.roon-server = {
@@ -60,12 +63,20 @@
 		enable = true;
 		openFirewall = true;
 		package = pkgs.plex.overrideAttrs (final: old: {
-			version = "1.32.8.7639-fb6452ebf";
+			version = "1.41.0.8994-f2c27da23";
 			src = pkgs.fetchurl {
 				url = "https://downloads.plex.tv/plex-media-server-new/${final.version}/debian/plexmediaserver_${final.version}_amd64.deb";
-				sha256 = "sha256-jdGVAdvm7kjxTP3CQ5w6dKZbfCRwSy9TrtxRHaV0/cs=";
+				sha256 = "sha256-e1COeawdR0pCF+qQ/xkTn/716iM9kB/fXom5MWHQ0YI=";
 			};
 		});
+	};
+
+	# temporary, until the new gateway box comes
+	services.unifi = {
+		enable = true;
+		openFirewall = true;
+		unifiPackage = pkgs.unifi;
+		mongodbPackage = pkgs.mongodb-ce;
 	};
 
 	# Open ports in the firewall.
@@ -76,6 +87,9 @@
 		# 5etools & other sites
 		80
 		443
+		
+		# temporary: unifi controller
+		8443
 	];
 	networking.firewall.allowedUDPPorts = [
 		# roon arc
@@ -105,6 +119,61 @@
 					'';
 				};
 			};
+			"ui.home.metamagical.dev" = {
+				serverAliases = [ "ui" ];
+				acmeRoot = null; # manual setup below
+				useACMEHost = "home.metamagical.dev";
+				addSSL = true;
+				locations."/" = {
+					proxyPass = "https://127.0.0.1:8443";
+				};
+				locations."/inform" = {
+					proxyPass = "http://127.0.0.1:8080";
+				};
+				locations."/wss" = {
+					proxyPass = "https://127.0.0.1:8443";
+				};
+				extraConfig = ''
+					proxy_ssl_verify off;
+
+					proxy_set_header Origin "";
+					proxy_set_header Referer "";
+				'';
+			};
+			"plex.home.metamagical.dev" = {	
+				serverAliases = [ "plex" ];
+				locations."/" = {
+					proxyPass = "https://127.0.0.1:32400";
+				};
+				extraConfig = ''
+					gzip on;
+					gzip_vary on;
+					gzip_min_length 1000;
+					gzip_proxied any;
+					gzip_types text/plain text/css text/xml application/xml text/javascript application/x-javascript image/svg+xml;
+					# don't break phone camera upload
+					client_max_body_size 100M;
+					
+					proxy_set_header Host $host;
+					proxy_set_header X-Real-IP $remote_addr;
+					proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+					proxy_set_header X-Forwarded-Proto $scheme;
+					proxy_set_header Sec-WebSocket-Extensions $http_sec_websocket_extensions;
+					proxy_set_header Sec-WebSocket-Key $http_sec_websocket_key;
+					proxy_set_header Sec-WebSocket-Version $http_sec_websocket_version;
+
+					#Websockets
+					proxy_http_version 1.1;
+					proxy_set_header Upgrade $http_upgrade;
+					proxy_set_header Connection "Upgrade";
+
+					proxy_redirect off;
+					proxy_buffering off;
+				'';
+				acmeRoot = null; # manual setup below
+				useACMEHost = "home.metamagical.dev";
+				addSSL = true;
+			};
 			"_" = {
 				default = true;
 				extraConfig = ''
@@ -125,7 +194,7 @@
 				domain = "*.home.metamagical.dev";
 				dnsProvider = "porkbun";
 				environmentFile = "/var/lib/secrets/acme.secret";
-				extraDomainNames = [ "house.metamagical.dev" "home.metamagical.dev" ];
+				extraDomainNames = [ "house.metamagical.dev" "home.metamagical.dev" "plex.metamagical.dev" ];
 			};
 		};
 	};
