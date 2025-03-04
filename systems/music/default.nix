@@ -95,6 +95,7 @@
 		# roon arc
 		55000
 	];
+	networking.firewall.checkReversePath = "loose"; # weird dual nic setup 
 
 	#### internal site hosting
 	services.nginx = {
@@ -203,7 +204,47 @@
 	# Enable the OpenSSH daemon.
 	services.openssh.enable = true;
 
-	networking.firewall.checkReversePath = "loose"; # weird dual nic setup 
+	### networking setup
+	systemd.network = {
+		networks = {
+			"30-wired-lan" = {
+				matchConfig.Name = "eno1";
+				vlan = [ "wlan-vlan" ];
+				networkConfig = {
+					DHCP = "ipv4";
+					IPv6AcceptRA = true;
+				};
+				dhcpV4Config = {
+					ClientIdentifier = "mac";
+				};
+			};
+			"40-wlan-vlan" = {
+				matchConfig.Name = "wlan-vlan";
+				networkConfig = {
+					DHCP = "ipv4";
+					IPv6AcceptRA = true;
+				};
+				dhcpV4Config = {
+					ClientIdentifier = "mac";
+				};
+			};
+		};
+
+		# join to the wlan vlan for roon stuff, since roon can't discover cross-vlan
+		netdevs = {
+			"20-wlan-vlan-vlan" = {
+				netdevConfig = {
+					Kind = "vlan";
+					Name = "wlan-vlan";
+				};
+				vlanConfig.Id = 2;
+			};
+		};
+	};
+
+	# only on the specified adapters
+	networking.useDHCP = false;
+
 
 	# This option defines the first version of NixOS you have installed on this particular machine,
 	# and is used to maintain compatibility with application data (e.g. databases) created on older NixOS versions.

@@ -83,6 +83,7 @@
 				name = "music";
 				cfg = {
 					local.userFacing = false;
+					local.networking = "systemd";
 				};
 			};
 
