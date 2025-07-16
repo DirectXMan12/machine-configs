@@ -66,6 +66,7 @@ in
 
 						subnet4 = lists.imap1 (id: subnet: subnet // { id = id; }) (lists.flatten (attrsets.mapAttrsToList (name: iface: lists.map (addr: {
 							# TODO: hash iface name & address set for id?
+
 							subnet = "${addr.address}/${toString addr.mask}";
 							ddns-send-updates = addr.v4.dhcp.dynDNS;
 							pools = attrsets.mapAttrsToList (pool: opts: {

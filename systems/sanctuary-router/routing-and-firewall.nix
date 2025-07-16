@@ -56,7 +56,8 @@ in
             # allow trusted vlans access to the router
             ip saddr @lan_addrs counter accept;
             ip saddr @wlan_addrs counter accept;
-            # don't allow iot devices access to the router
+            # don't allow iot devices access to the router, except for dns
+            ip saddr @iot_addrs udp dport 53 accept;
             ip saddr @iot_addrs counter drop;
           '';
           forward = ''
