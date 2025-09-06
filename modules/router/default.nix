@@ -41,6 +41,7 @@ let
 					# seems to be the max comcast will give
 					# TODO: make this configurable
 					PrefixDelegationHint = "::/60";
+					#PrefixDelegationHint = "::/64";
 				};
 				# TODO: explicitly set uplink interface from wan interfaces via `UplinkInterface`?
 			};

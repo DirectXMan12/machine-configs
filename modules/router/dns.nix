@@ -98,7 +98,7 @@ let
           forward = {
             name_servers = [{
               socket_addr = "8.8.8.8:53";
-              protocol = "udp";
+              protocol = { type = "udp"; };
               trust_negative_responses = false;
             }];
           };
@@ -121,7 +121,6 @@ let
                                       86400)    ; Minimum TTL
                               NS      ${cfg.authority}.
     '';
-    # TODO: tsig and/or limit to coming from localhost
     zones = lists.concatMap (addr: [
       {
         # forward
@@ -136,14 +135,13 @@ let
               '';
               journal_file_path = "dyn-${addr.v4.dhcp.domainName}.jrnl";
               allow_update = true;
+              tsig_keys = [{
+                name = "main-key";
+                algorithm = "hmac-sha256";
+                key_file = "/var/lib/hickory-dns/main-tsig.key";
+              }];
             };
           }];
-          # TODO: fill this in once tsig support is in place
-          #keys = [{
-          #  key_path = /var/lib/kea/ddns-update-key.pk8;
-          #  algorithm = "Ed25519";
-          #  purpose = "ZoneUpdateAuth";
-          #}];
         };
       }
       (
@@ -166,6 +164,11 @@ let
                   '';
                   journal_file_path = "dyn-rev-${addr.v4.dhcp.domainName}.jrnl";
                   allow_update = true;
+                  tsig_keys = [{
+                    name = "main-key";
+                    algorithm = "hmac-sha256";
+                    key_file = "/var/lib/hickory-dns/main-tsig.key";
+                  }];
                 };
               }];
             };
@@ -229,7 +232,12 @@ let
           type = types.listOf (types.submodule {
             options = {
               socket_addr = mkOption { type = types.str; };
-              protocol = mkOption { type = types.enum ["tcp" "udp" "tls" "quic" "https" "h3"]; };
+              # TODO: make this nicer in nix
+              protocol = mkOption { type = types.submodule {
+                options = {
+                  type = mkOption { type = types.enum ["tcp" "udp" "tls" "quic" "https" "h3"]; };
+                };
+              }; };
               trust_negative_responses = mkOption { type = types.nullOr types.bool; default = null; };
               # TODO: make removeNulls work with lists
               # tls_dns_name = mkOption { type = types.nullOr types.str; default = null; };
@@ -255,6 +263,14 @@ let
         zone_file_path = mkOption { type = types.path; };
         journal_file_path = mkOption { type = types.str; };
         allow_update = mkOption { type = types.bool; };
+        tsig_keys = mkOption { type = types.listOf (types.submodule {
+          options = {
+            name = mkOption { type = types.str; };
+            algorithm = mkOption { type = types.enum ["HMAC-MD5.SIG-ALG.REG.INT" "gss-tsig" "hmac-sha1" "hmac-sha224" "hmac-sha256" "hmac-sha256-128" "hmac-sha384" "hmac-sha384-192" "hmac-sha512" "hmac-sha512-256"]; };
+            key_file = mkOption { type = types.either types.path types.str; };
+            # TODO: fudge?
+          };
+        }); };
       };
     };
   };

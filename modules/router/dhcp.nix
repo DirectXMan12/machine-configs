@@ -27,9 +27,11 @@ in
 					# mappings), which would require allowing multiple subnets with the
 					# same subnet name (so allocating subnet ids or something?)
 					enable = hasDynDNS;
-					settings = {
+					# T_T we can't use `settings`	because we need kea's `<?include "[PATH]">` directive
+					configFile = let
 						forward-ddns.ddns-domains = builtins.map (addr: {
 							name = "${addr.v4.dhcp.domainName}.";
+							key-name = "main-key";
 							dns-servers = [{ ip-address = "127.0.0.1"; }];
 						}) dhcpDynDNSAddrs;
 
@@ -41,9 +43,23 @@ in
 								reversedStr = lib.strings.concatStringsSep "." (drop 1 reversed);
 							in
 								"${reversedStr}.in-addr.arpa.";
+							key-name = "main-key";
 							dns-servers = [{ ip-address = "127.0.0.1"; }];
 						}) dhcpDynDNSAddrs;
-					};
+					in
+						pkgs.writeText "kea-dhcp-ddns.json" ''
+						{
+							"DhcpDdns": {
+								"forward-ddns": ${builtins.toJSON forward-ddns},	
+								"reverse-ddns": ${builtins.toJSON reverse-ddns},	
+								"tsig-keys": [{
+									"name": "main-key",
+									"algorithm": "HMAC-SHA256",
+									<?include "/etc/kea/main-tsig.json"?>
+								}]
+							}
+						}
+						'';
 				};
 				dhcp4 = {
 					# TODO: configurable pool size
