@@ -3,17 +3,19 @@
 
 	# use a released version
 	inputs = {
-		nixpkgs.url = "nixpkgs/nixos-24.11";
+		nixpkgs.url = "nixpkgs/nixos-25.05";
 		nixpkgs-unstable.url = "nixpkgs/nixos-unstable";
 		lanzaboote = {
 			url = "github:nix-community/lanzaboote";
 			inputs.nixpkgs.follows = "nixpkgs";
 		};
 		nixpkgs-wayland.url = "github:nix-community/nixpkgs-wayland";
-		nixos-sbc.url = "github:nakato/nixos-sbc/main";
+		nixos-sbc = {
+			url = "github:nakato/nixos-sbc/main";
+			inputs.nixpkgs.follows = "nixpkgs-unstable";
+		};
 
 		nixpkgs-wayland.inputs.nixpkgs.follows = "nixpkgs-unstable";
-		nixos-sbc.inputs.nixpkgs.follows = "nixpkgs-unstable";
 	};
 
 	outputs = { self, nixpkgs, nixos-hardware, nixpkgs-unstable, lanzaboote, nixos-sbc, ... }@attrs:

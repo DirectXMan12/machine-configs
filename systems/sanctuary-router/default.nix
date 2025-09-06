@@ -20,7 +20,7 @@
 	boot.kernelPatches = [
 		{
 			patch = null;
-			extraStructuredConfig = with lib.kernel; {
+			structuredExtraConfig = with lib.kernel; {
 				WIREGUARD = module;
 			};
 		}

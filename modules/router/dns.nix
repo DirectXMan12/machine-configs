@@ -345,16 +345,16 @@ in
         enable = true;
         settings = {};
         package = pkgs.rustPlatform.buildRustPackage rec {
-          version = "0.25.0-alpha.5";
+          version = "0.26.0-alpha.1";
           pname = "hickory-dns";
 
           src = pkgs.fetchFromGitHub {
             owner = "hickory-dns";
             repo = "hickory-dns";
             tag = "v${version}";
-            hash = "sha256-dbtdTvwm1DiV/nQzTAZJ7CD5raId9+bGNLrS88OocxI=";
+            hash = "sha256-tXBGnrD0KrIhRKBEeq+jLSgFWHFTRUU6AGiAGEALIwk=";
           };
-          cargoHash = "sha256-lBxCGR4/PrUJ0JLqBn/VzJY47Yp8M4TRsYfCsZN17Ek=";
+          cargoHash = "sha256-p3IDm+C8266Lh2To0Vho0SNL91VRktMljpI89J/A0u4=";
           useFetchCargoVendor = true;
           buildInputs = [ pkgs.openssl ];
           buildFeatures = [ "recursor" "blocklist" "dnssec-ring" ];
