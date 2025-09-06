@@ -31,6 +31,22 @@ in
         resolve = true;
         authority = "home.metamagical.dev";
         zones = {
+          "house.metamagical.dev" = {
+            type = "primary";
+            # TODO: make this easier
+            file = pkgs.writeText "house.metamagical.dev.zone" ''
+              $TTL 3D
+              @               IN      SOA     ${config.router.dns.authority}. internal-dns.${config.router.dns.authority}. (
+                      199609203 ; Serial
+                      28800     ; Refresh
+                      7200      ; Retry
+                      604800    ; Expire
+                      86400)    ; Minimum TTL
+                    NS      ${config.router.dns.authority}.
+              @             IN      A      ${musicAddr}
+              *             IN      A      ${musicAddr}
+            '';
+          };
           # add in blocklists
           "." = {
             stores = lib.mkBefore [{
