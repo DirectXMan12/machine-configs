@@ -291,9 +291,11 @@
 				networkConfig = {
 					DHCP = "ipv4";
 					IPv6AcceptRA = true;
+					DefaultRouteOnDevice = false;
 				};
 				dhcpV4Config = {
 					ClientIdentifier = "mac";
+					UseRoutes = false;
 				};
 			};
 		};
@@ -312,6 +314,7 @@
 
 	# only on the specified adapters
 	networking.useDHCP = false;
+	networking.nftables.enable = true;
 
 
 	# This option defines the first version of NixOS you have installed on this particular machine,
