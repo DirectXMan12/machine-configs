@@ -105,7 +105,7 @@
 		# roon arc
 		55000
 	];
-	networking.firewall.checkReversePath = "loose"; # weird dual nic setup 
+	networking.firewall.checkReversePath = "loose"; # weird dual nic setup
 
 	#### internal site hosting
 	services.nginx = {
@@ -195,7 +195,7 @@
 					gzip_types text/plain text/css text/xml application/xml text/javascript application/x-javascript image/svg+xml;
 					# don't break phone camera upload
 					client_max_body_size 100M;
-					
+
 					proxy_set_header Host $host;
 					proxy_set_header X-Real-IP $remote_addr;
 					proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
