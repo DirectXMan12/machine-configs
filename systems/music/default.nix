@@ -25,10 +25,14 @@
 			"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC8b9W7EoETKMuP/1XlE/WQXrJ47U9nbwictLu4caOcrwqUJvdK0X/K919WoxJgbXf8CVB1ezkhyuAiS8jVdMMpdBJ2F1N4AkaYz95cMEf8ZpNN91e+ZtkhChBj2NTRShHodpL6S8CRmFPb+puhDNqjxKiohzv6ogPmAZ5UzL0lUipS/wzrUfmIOLLSEoFsSxo2YamSjHRkomN7H9Fa70IzZPusTe9bD9LOur1OIg3QPPz9O5sAjzn9j6WLIW87y862YkqeKHygvzBZ9kNmaq7ITJq65budfV56lxW2TgT8gby7zmQTuBJOfEwvPe+VjC302BdFdXMO/xjhVLGAv49FMlt6mogr9XMsz2+4z/y0lmv3E//yDGK+WRYWjir6Ew73Q74IIgLmPEkOMZ6LWPgeTbfJ8w774kGfxOCjb8IFGQssG7gMrDGKZTzUygwgnEnW5j11Sd+GwsLRsuvTcUZpkp7U5f7WtHBJKYh3wCMzeXel5HvfYyisjeTz4TKcMPyjeTRSOj9YTI6gDz/BseXyd2iqc45SsbMoqSSs5e3+q3JpsRCn+90U2tEwGyiHAYbAtNgmqK2aaN3lgQA3JKMU8wKe1TW0JdXEawreIfKeFjkRwIHNKKNmEB4CEtxQphmM5Imn1Cgnqqh3DJaWlQur3rfqRJvaiIHg7UlDKFW34Q=="
 			"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDVIAe6BXlZmi7LgCQJ34/4D31zxy68XvD/jE4mT7kmsU7wdnStt468Q8KO/SX69kq9WUqGo/mu5/vXk1fgp84onmp2UTdLPsNF9GJ4ppENUULwUosHCz2oF8syqI5Zd0hFhpTdhM1IXDzI+5r/HA85PK0zDUse3c1Oa7kaFcNvpERAifiaERVWzzdY4Q1MOFKWHvYwZXws+p9W5QOdizok/dgfCViZ6O8uDkfd9zlVfyWeAhJqfCPqhWVZrqhEtmIroAbrNIwQD+7WNg1MDG94WO5HV0qqIURhFb/KqoMzKrccu48W/RgzwCRGd9iPMnUXS6jIlYIirdmqUx1tmIfmWTCjr4nhseCl2wAeKRA+ZN2ZE3CiwBjJdF3Fd2fdxaVIXSCbKP7LZgGnIieL4dULOM8wBroSbog7kqGC7ayjYDuCtHZRB638kiTV18+UzkGCvHcLKrLaZ7w0q/5agEASYR+LEKoQojUKV9fPnNRIBHPQMNI5m/nZ7GnW9HtETTcrluu06xwapLm4iLDbe8K7MTKiPdztvea8jC3U5G65itO4RgV6ws1HTTizb041Ks0uT7IW8QKJ/OTjviBgEdQ/sZW8kYVuXPAfHZogTkAHvOMyo17IYOU81qcFPROC0z2AzEcYlDMcds5qeLk2BuqwZva9yeo1WpeWxOcbxPwEbw=="
 		];
-		
+
 		roon-server = {
 			isSystemUser = true;
 			uid = 997; # for a stable uid for /roon-music mount
+		};
+		calibre = {
+			isSystemUser = true;
+			group = "calibre";
 		};
 	};
 
@@ -36,6 +40,9 @@
 		music-players = {
 			members = [ "roon-server" "plex" ];
 			gid = 993; # stable gid for /roon-music mount
+		};
+		calibre = {
+			members = ["calibre"];
 		};
 	};
 
@@ -141,7 +148,38 @@
 					proxy_set_header Referer "";
 				'';
 			};
-			"plex.home.metamagical.dev" = {	
+			"calibre.house.metamagical.dev" = {
+				serverAliases = [ "calibre" ];
+				locations."/" = {
+					# calibre server
+					proxyPass = "http://127.0.0.1:65002";
+					extraConfig = ''
+						client_max_body_size 256M;
+					'';
+				};
+				locations."/web" = {
+					# calibre web
+					proxyPass = "http://127.0.0.1:65003";
+					extraConfig = ''
+						proxy_set_header X-Script-Name /web;
+						rewrite '^/web(/.*)?' /$1 break;
+						client_max_body_size 256M;
+					'';
+
+				};
+				extraConfig = ''
+					gzip on;
+					gzip_vary on;
+					gzip_min_length 1000;
+					gzip_proxied any;
+					gzip_types text/plain text/css text/xml application/xml text/javascript application/x-javascript image/svg+xml;
+				'';
+				acmeRoot = null; # manual setup below
+				useACMEHost = "home.metamagical.dev";
+				addSSL = true;
+			};
+			# TODO: not working
+			"plex.house.metamagical.dev" = {
 				serverAliases = [ "plex" ];
 				locations."/" = {
 					proxyPass = "https://127.0.0.1:32400";
@@ -202,6 +240,29 @@
 				dnsResolver = "8.8.8.8:53";
 			};
 		};
+	};
+
+	##### calibre
+	services.calibre-server = {
+		enable = true;
+		host = "127.0.0.1";
+		port = 65002;
+		libraries = ["/web-root/calibre/library"];
+		user = "calibre";
+		auth = {
+			enable = true;
+			mode = "basic";
+			userDb = "/web-root/calibre/users.db";
+		};
+	};
+	services.calibre-web = {
+		enable = true;
+		listen = {
+			ip = "127.0.0.1";
+			port = 65003;
+		};
+		options.calibreLibrary = "/web-root/calibre/library";
+		user = "calibre";
 	};
 
 	#### misc
