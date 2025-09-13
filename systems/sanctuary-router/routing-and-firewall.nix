@@ -66,6 +66,7 @@ in
           {port = 32400; protocol = "tcp"; to = musicAddr; comment = "plex --> music";}
           {port = 3074; protocol = "tcp"; to = gamingPCAddr; comment = "destiny/steam --> gaming pc";}
           {port = 3097; protocol = "tcp"; to = gamingPCAddr; comment = "destiny/steam --> gaming pc";}
+          {port = 5349; protocol = "tcp"; to = musicAddr; comment = "unifi remote management --> unifi controller";}
         ];
         inetChains = {
           input = ''
