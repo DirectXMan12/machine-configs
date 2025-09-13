@@ -94,9 +94,12 @@
 		# 5etools & other sites
 		80
 		443
-		
-		# temporary: unifi controller
+
+		# unifi controller web
 		8443
+
+		# unifi remote management
+		5349
 	];
 	networking.firewall.allowedUDPPorts = [
 		# roon arc
