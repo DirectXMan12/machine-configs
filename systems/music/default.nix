@@ -111,7 +111,7 @@
 	services.nginx = {
 		enable = true;
 		virtualHosts = {
-			"5etools.home.metamagical.dev" = {
+			"5etools.house.metamagical.dev" = {
 				serverAliases = [ "5etools" ];
 				root = "/web-root/5etools";
 				acmeRoot = null; # manual setup below
@@ -130,7 +130,7 @@
 					'';
 				};
 			};
-			"ui.home.metamagical.dev" = {
+			"ui.house.metamagical.dev" = {
 				serverAliases = [ "ui" ];
 				acmeRoot = null; # manual setup below
 				useACMEHost = "home.metamagical.dev";
@@ -236,7 +236,7 @@
 				domain = "*.home.metamagical.dev";
 				dnsProvider = "porkbun";
 				environmentFile = "/var/lib/secrets/acme.secret";
-				extraDomainNames = [ "house.metamagical.dev" "home.metamagical.dev" "plex.metamagical.dev" ];
+				extraDomainNames = [ "*.house.metamagical.dev" "house.metamagical.dev" "home.metamagical.dev" "plex.metamagical.dev" ];
 				# TODO: this is needed because internal dns returns a SOA record for home.metamagical.dev
 				# (correctly), but when acme-go tries to split the domain it thinks that means it should try for
 				# `name = *, domain = home.metamagical.dev`, not `name = *.home, domain = metamagical.dev`.
