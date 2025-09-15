@@ -291,11 +291,9 @@
 				networkConfig = {
 					DHCP = "ipv4";
 					IPv6AcceptRA = true;
-					DefaultRouteOnDevice = false;
 				};
 				dhcpV4Config = {
 					ClientIdentifier = "mac";
-					UseRoutes = false;
 				};
 			};
 		};
