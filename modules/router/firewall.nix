@@ -5,6 +5,7 @@ let
     routerCfg = config.router;
     lanFaces = lib.attrsets.filterAttrs (name: iface: iface.type == "lan") routerCfg.interfaces;
     wanFaces = lib.attrsets.filterAttrs (name: iface: iface.type == "wan") routerCfg.interfaces;
+    wgFaces = lib.attrsets.filterAttrs (name: iface: iface.type == "wireguard") routerCfg.interfaces;
     toCidr = addr: "${addr.address}/${toString addr.mask}";
 in
   {
@@ -85,7 +86,7 @@ in
                       };
                     ''
                   ) iface.addresses)
-                  lanFaces))
+                  (lanFaces // wgFaces)))
             }
 
             set wan_faces {

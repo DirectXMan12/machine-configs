@@ -36,12 +36,20 @@ let
 					DHCPPrefixDelegation = lib.mkIf (iface.type == "lan") true;
 					IPv4Forwarding = true;
 					IPv6Forwarding = true;
+					IPMasquerade = lib.mkIf (iface.type == "wireguard") "ipv4";
 				};	
+				dhcpV4Config = lib.mkIf (iface.type == "wan") {
+					# don't release our ip every time we change config
+					SendRelease = false;
+				};
 				dhcpV6Config = lib.mkIf (iface.type == "wan") {
 					# seems to be the max comcast will give
 					# TODO: make this configurable
 					PrefixDelegationHint = "::/60";
 					#PrefixDelegationHint = "::/64";
+
+					# don't release our ip every time we change config
+					SendRelease = false;
 				};
 				# TODO: explicitly set uplink interface from wan interfaces via `UplinkInterface`?
 			};
@@ -53,14 +61,28 @@ let
 				Name = vlanDevName name;
 			};
 			vlanConfig.Id = iface.vlan.id;
-		};
+		} // (if iface.netdev != null then iface.netdev else {});
 	};
+  toWgFace = name: iface: {
+		# TODO: make this work
+		"21-${name}-netdev" = {
+			netdevConfig = {
+				Kind = "wireguard";
+				Name = name;
+			};
+		} // iface.netdev;
+  };
+	needsNetdev = name: iface: isVlan name iface || (iface.type == "wireguard" && iface.vlan.id == null);
+	toNetdev = name: iface: if iface.vlan.id != null then
+		toVlan name iface
+	else
+		toWgFace name iface;
 
 	# option submodules
 	interfaceOptions = { name, config, ... }: with lib; {
 		options = {
 			type = mkOption {
-				type = types.enum ["lan" "wan"];
+				type = types.enum ["lan" "wan" "wireguard"];
 				default = "lan";
 			};
 			link = mkOption {
@@ -78,6 +100,18 @@ let
 				# TODO: check that it refers to other interfaces
 				type = types.listOf types.str;
 				default = [];
+			};
+			netdev = mkOption {
+				type = types.nullOr (types.submodule {
+					options = {
+						netdevConfig = mkOption { type = types.nullOr (types.attrsOf anySystemd); default = null; };
+						wireguardConfig = mkOption { type = types.nullOr (types.attrsOf anySystemd); default = null; };
+						wireguardPeers = mkOption { type = types.nullOr (types.listOf (types.attrsOf anySystemd)); default = null; };
+						# TODO: rest of the owl? i don't quite understand why attrsOf doesn't work here
+						# maybe deferredModule could help?
+					};
+				});
+				default = null;
 			};
 			addresses = mkOption {
 				# TODO: parse address to check
@@ -192,6 +226,17 @@ in
 					};
 					default = {};
 				};
+				wireguard = mkOption {
+					type = types.submodule {
+						options = {
+							requiredForOnline = mkOption {
+								type = types.nullOr types.str;
+								default = null;
+							};
+						};
+					};
+					default = {};
+				};
 			};
 			interfaces = mkOption {
 				type = types.attrsOf (types.submodule interfaceOptions);
@@ -216,11 +261,10 @@ in
 
 				networks = attrsets.concatMapAttrs toNetwork cfg.interfaces;
 				
-				# TODO: other netdev support
 				netdevs = let
-					vlanFaces = attrsets.filterAttrs isVlan cfg.interfaces;
+					faces = attrsets.filterAttrs needsNetdev cfg.interfaces;
 				in 
-					attrsets.concatMapAttrs toVlan vlanFaces;
+					attrsets.concatMapAttrs toNetdev faces;
 			};
 
 			# TODO: dns

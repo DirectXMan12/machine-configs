@@ -12,6 +12,7 @@ let
   };
   musicAddr = "192.168.1.5";
   gamingPCAddr = "192.168.1.2";
+  wireguard-port = 51820;
 in
   {
     # TODO: add an extraConfig.networkConfig to the interfaces section -- this naming is brittle
@@ -73,10 +74,13 @@ in
             # allow trusted vlans access to the router
             ip saddr @lan_addrs counter accept;
             ip saddr @wlan_addrs counter accept;
+            ip saddr @ext_wg_addrs counter accept;
             # don't allow iot devices access to the router, except for dns
             ip saddr @iot_addrs udp dport 53 accept;
             ip saddr @iot_addrs counter drop;
+            iifname @wan_faces udp dport ${toString wireguard-port} counter accept;
           '';
+          # TODO: make the ipv6 forwards a more formalized system
           forward = ''
             # plug in our flow offloading
             # ip protocol { tcp, udp } flow offload @mainflow;
@@ -91,6 +95,19 @@ in
             # allow trusted traffic between subnets
             iifname { "sfp-lan", "wlan-vlan" } oifname { "sfp-lan", "wlan-vlan", "iot-vlan" } counter accept comment "allow trusted <--> any internal";
             iifname { "iot-vlan" } oifname { "sfp-lan", "wlan-vlan" } ct state { established, related } counter accept comment "iot (established) --> internal subnets";
+
+            # allow external ipv6 traffic to ingress directly to machines even when unestablished, but only for specified ports
+            # figure out best way to better say "only to specified machine"
+            iifname @wan_faces oifname { "sfp-lan" } tcp dport 55000 accept comment "roon arc --> music?";
+
+            # allow vpn traffic to other subnets and vice versa
+            iifname { "sfp-lan", "wlan-vlan" } oifname { "ext-wg" } counter accept comment "allow trusted --> vpn";
+            iifname { "iot-vlan" } oifname { "ext-wg" } ct state { established, related } counter accept comment "iot (established) --> vpn";
+            iifname { "ext-wg" } oifname @lan_faces counter accept comment "allow vpn --> any internal";
+
+            # allow vpn to function as egress vpn
+            iifname { "ext-wg" } oifname @wan_faces counter accept comment "allow vpn --> egress";
+            iifname @wan_faces oifname { "ext-wg" } ct state { established, related } counter accept comment "allow external established --> vpn";
           '';
         };
       };
@@ -168,6 +185,33 @@ in
               pools = { "192.168.3.100 - 192.168.3.245" = {}; };
             };
           }];
+        };
+
+        "ext-wg" = {
+          type = "wireguard";
+          netdev = {
+            netdevConfig = {
+							Kind = "wireguard";
+							Name = "ext-wg";
+						};
+            wireguardConfig = {
+              PrivateKeyFile = "/etc/keys/wg/ext-wg-priv.key";
+              ListenPort = wireguard-port;
+            };
+            wireguardPeers = [
+              # TODO: ipv6
+              # laptop
+              { PublicKey = "vXj2L8S7fb8liYWLRMdCJj57hsPWkePmVFtHHHIOYFM="; AllowedIPs = ["10.100.0.3"]; }
+              # phone
+              { PublicKey = "gv/EIInCeuS/xSIEnWXv/HyLyM5X2dj0c2FnpcjWDVk="; AllowedIPs = ["10.100.0.4"]; }
+            ];
+          };
+          addresses = [{
+            address = "10.100.0.1";
+            alias = "ext_wg";
+            mask = 24;
+          }];
+          # TODO: ipv4 masquerade
         };
       };
     };
