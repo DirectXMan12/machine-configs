@@ -181,6 +181,42 @@
 				useACMEHost = "home.metamagical.dev";
 				addSSL = true;
 			};
+			"kavita.house.metamagical.dev" = {
+				serverAliases = [ "kavita" ];
+				locations."/" = {
+					# calibre server
+					proxyPass = "http://127.0.0.1:65004";
+					extraConfig = ''
+						client_max_body_size 256M;
+					'';
+				};
+				locations."/hubs/" = {
+					proxyPass = "http://127.0.0.1:65004";
+					extraConfig = ''
+						# Headers to proxy websocket connections
+						proxy_http_version 1.1;
+						proxy_set_header Upgrade $http_upgrade;
+						proxy_set_header Connection "Upgrade"; 
+					'';
+				};
+				extraConfig = ''
+					# The following configurations must be configured when proxying to Kavita
+					# Host and X headers
+					proxy_set_header	Host $host;
+					proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for; aio threads;
+					proxy_set_header        X-Forwarded-Proto $scheme;
+
+					gzip on;
+					gzip_vary on;
+					gzip_min_length 1000;
+					gzip_proxied any;
+					gzip_types text/plain text/css text/xml application/xml text/javascript application/x-javascript image/svg+xml;
+
+				'';
+				acmeRoot = null; # manual setup below
+				useACMEHost = "home.metamagical.dev";
+				addSSL = true;
+			};
 			# TODO: not working
 			"plex.house.metamagical.dev" = {
 				serverAliases = [ "plex" ];
@@ -266,6 +302,17 @@
 		};
 		options.calibreLibrary = "/web-root/calibre/library";
 		user = "calibre";
+	};
+	###### kavita (calibre-like, but with better support for manga)
+	services.kavita = {
+		enable = true;
+		user = "calibre";
+		settings = {
+			Port = 65004;
+			IpAddresses = "127.0.0.1";
+		};
+		dataDir = "/web-root/kavita";
+		tokenKeyFile = "/web-root/kavita/tokens.key";
 	};
 
 	#### misc
