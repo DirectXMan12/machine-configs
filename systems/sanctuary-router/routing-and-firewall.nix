@@ -98,7 +98,9 @@ in
 
             # allow external ipv6 traffic to ingress directly to machines even when unestablished, but only for specified ports
             # figure out best way to better say "only to specified machine"
-            iifname @wan_faces oifname { "sfp-lan" } tcp dport 55000 accept comment "roon arc --> music?";
+            iifname @wan_faces oifname { "sfp-lan", "wlan-vlan" } tcp dport 55000 accept comment "roon arc --> music?";
+            iifname @wan_faces oifname { "sfp-lan", "wlan-vlan" } udp dport 55000 accept comment "roon arc --> music?";
+            iifname @wan_faces oifname { "sfp-lan", "wlan-vlan" } icmpv6 type echo-request limit rate 20/second accept;
 
             # allow vpn traffic to other subnets and vice versa
             iifname { "sfp-lan", "wlan-vlan" } oifname { "ext-wg" } counter accept comment "allow trusted --> vpn";
