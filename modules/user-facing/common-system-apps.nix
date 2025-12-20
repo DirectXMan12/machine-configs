@@ -8,6 +8,7 @@ with lib;
 			"google-chrome"
 			"google-chrome-beta"
 			"steam"
+			"steam-unwrapped"
 			"steam-original"
 			"steam-run"
 			"steamcmd"

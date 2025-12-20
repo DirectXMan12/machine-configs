@@ -91,7 +91,7 @@ with lib;
 		fonts.packages = with pkgs; [
 			# for waybar
 			font-awesome
-			(nerdfonts.override { fonts = [ "DejaVuSansMono" ]; })
+			nerd-fonts.dejavu-sans-mono
 		];
 	};
 }
