@@ -41,4 +41,6 @@ SUBSYSTEM=="hidraw", ATTRS{idVendor}=="2e6c", ATTRS{idProduct}=="3201", GROUP="p
 	hardware.bluetooth.enable = true;
 
 	hardware.keyboard.qmk.enable = true;
+
+	services.pcscd.enable = true;
 }
