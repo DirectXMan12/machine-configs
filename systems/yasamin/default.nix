@@ -29,5 +29,14 @@
 		steam-tui
 	];
 
+	services.udev = {
+		enable = true;
+		extraRules = ''
+# Scubapro G2
+SUBSYSTEM=="usb", ATTR{idVendor}=="2e6c", ATTR{idProduct}=="3201", GROUP="plugdev"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="2e6c", ATTRS{idProduct}=="3201", GROUP="plugdev"
+		'';
+	};
+
 	hardware.keyboard.qmk.enable = true;
 }
