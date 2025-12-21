@@ -29,16 +29,8 @@
 	services.oink = {
 		enable = true;
 		domains = [{ domain = "metamagical.house"; subdomain = "tunnel"; }];
-		settings = {
-			apiKey = "in-env-file";
-			secretApiKey = "in-env-file";
-		};
-	};
-	# uugh why is the oink module set up like this?
-	systemd.services.oink = {
-		serviceConfig = {
-			EnvironmentFile = ["/etc/keys/oink.env"];
-		};
+		secretApiKeyFile = "/etc/keys/oink.secret-key";
+		apiKeyFile = "/etc/keys/oink.key";
 	};
 
 	# TODO: wireguard
