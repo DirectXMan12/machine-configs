@@ -78,11 +78,10 @@
 		});
 	};
 
-	# temporary, until the new gateway box comes
 	services.unifi = {
 		enable = true;
 		openFirewall = true;
-		unifiPackage = pkgs.unifi;
+		unifiPackage = pkgs.unstable.unifi;
 		mongodbPackage = pkgs.mongodb-ce;
 	};
 
@@ -100,12 +99,43 @@
 
 		# unifi remote management
 		5349
+
+		# for sso
+		28443
 	];
 	networking.firewall.allowedUDPPorts = [
 		# roon arc
 		55000
 	];
 	networking.firewall.checkReversePath = "loose"; # weird dual nic setup
+
+	#### auth
+	services.kanidm = {
+		enableServer = true;
+		# TODO: PAM?
+		serverSettings = {
+			version = "2";
+
+			## domain
+			# use these so that we can choose to make things public eventually
+			origin = "https://sso.metamagical.house";
+			domain = "sso.metamagical.house";
+
+			## tls
+			# set up in the acme client below from letsencrypt
+			tls_key = "/var/lib/kanidm/key.pem";
+			tls_chain = "/var/lib/kanidm/fullchain.pem";
+
+			## misc
+			bindaddress = "[::1]:18443";
+			http_client_address_info.x-forward-for = ["::1" "127.0.0.1"];
+
+			online_backup = {
+				path = "/service-backups/kanidm/";
+			};
+		};
+		package = pkgs.kanidm_1_8;
+	};
 
 	#### internal site hosting
 	services.nginx = {
@@ -252,6 +282,23 @@
 				useACMEHost = "home.metamagical.dev";
 				addSSL = true;
 			};
+			"sso.metamagical.house" = {
+				locations."/" = {
+					proxyPass = "https://${config.services.kanidm.serverSettings.bindaddress}";
+				};
+				acmeRoot = null; # manual setup below
+				useACMEHost = "sso.metamagical.house";
+				addSSL = true;
+				extraConfig = ''
+					gzip on;
+					gzip_vary on;
+					gzip_min_length 1000;
+					gzip_proxied any;
+					gzip_types text/plain text/css text/xml application/xml text/javascript application/x-javascript image/svg+xml;
+
+					proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+				'';
+			};
 			"_" = {
 				default = true;
 				extraConfig = ''
@@ -277,6 +324,21 @@
 				# (correctly), but when acme-go tries to split the domain it thinks that means it should try for
 				# `name = *, domain = home.metamagical.dev`, not `name = *.home, domain = metamagical.dev`.
 				dnsResolver = "8.8.8.8:53";
+			};
+			"sso.metamagical.house" = {
+				group = "nginx";
+				domain = "sso.metamagical.house";
+				dnsProvider = "porkbun";
+				environmentFile = "/var/lib/secrets/acme.secret";
+				# TODO: this is needed because internal dns returns a SOA record for home.metamagical.dev
+				# (correctly), but when acme-go tries to split the domain it thinks that means it should try for
+				# `name = *, domain = home.metamagical.dev`, not `name = *.home, domain = metamagical.dev`.
+				dnsResolver = "8.8.8.8:53";
+				postRun = ''
+					cp -Lv {key,fullchain}.pem /var/lib/kanidm
+					chown kanidm:kanidm /var/lib/kanidm/{key,fullchain}.pem
+				'';
+				reloadServices = ["kanidm.service"];
 			};
 		};
 	};
@@ -305,14 +367,29 @@
 	};
 	###### kavita (calibre-like, but with better support for manga)
 	services.kavita = {
+		package = pkgs.unstable.kavita;
 		enable = true;
 		user = "calibre";
 		settings = {
 			Port = 65004;
 			IpAddresses = "127.0.0.1";
+			OpenIdConnectSettings = {
+				Authority = "https://sso.metamagical.house/oauth2/openid/kavita";
+				ClientId = "kavita";
+				Secret = "@OIDC_SECRET@";
+			};
 		};
 		dataDir = "/web-root/kavita";
 		tokenKeyFile = "/web-root/kavita/tokens.key";
+	};
+	# till this gets resolved upstream
+	systemd.services.kavita = {
+		after = ["kanidm.service"]; # needs to autodetect working openid url
+		preStart = lib.mkAfter
+			''
+				${pkgs.replace-secret}/bin/replace-secret '@OIDC_SECRET@' ''${CREDENTIALS_DIRECTORY}/oidc_secret /web-root/kavita/config/appsettings.json
+			'';
+		serviceConfig.LoadCredential = lib.mkAfter [ "oidc_secret:/web-root/kavita/oidc-secret.key" ];
 	};
 
 	#### misc
