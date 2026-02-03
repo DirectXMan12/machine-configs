@@ -21,12 +21,20 @@
 	outputs = { self, nixpkgs, nixos-hardware, nixpkgs-unstable, lanzaboote, nixos-sbc, ... }@attrs:
 		let
 			system = "x86_64-linux";
-			overlay-unstable-with-sway = final: prev: {
-				unstable = import nixpkgs-unstable {
-					system = "${prev.system}";
-					config.allowUnfreePredicate = pkg: builtins.elem (pkg.pname or (builtins.parseDrvName pkg.name).name) final.allowedUnfree;
-					# overlay for using unstable-sway in sway-and-friends
-					overlays = [ attrs.nixpkgs-wayland.overlay ];
+			overlays = {
+				unstable-with-sway = final: prev: {
+					unstable = import nixpkgs-unstable {
+						system = "${prev.system}";
+						config.allowUnfreePredicate = final.config.allowUnfreePredicate ;
+						# overlay for using unstable-sway in sway-and-friends
+						overlays = [ attrs.nixpkgs-wayland.overlay ];
+					};
+				};
+				unstable-only = final: prev: {
+					unstable = import nixpkgs-unstable {
+						system = "${prev.system}";
+						config.allowUnfreePredicate = final.config.allowUnfreePredicate;
+					};
 				};
 			};
 
@@ -47,10 +55,10 @@
 					./systems/${name}
 					({ ... }: { networking.hostName = name; })
 					({ config, pkgs, lib, ... }: {
-						config = lib.mkIf config.local.userFacing {
-							# make pkgs.unstable available in modules
-							nixpkgs.overlays = [ overlay-unstable-with-sway ];
-						};
+						config.nixpkgs.overlays = lib.mkMerge [
+							(lib.mkIf config.local.userFacing [ overlays.unstable-with-sway ])
+							(lib.mkIf (!config.local.userFacing) [ overlays.unstable-only ])
+						];
 					})
 					({ ... }: cfg)
 				] ++ modules;
