@@ -78,29 +78,29 @@ let
     "." = {
       type = "external";
       stores = [
+        # {
+        #   recursor = { 
+        #     roots = ./root.zone;
+        #     ns_cache_size = 1024;
+        #     record_cache_size = 1048576;
+        #     recursion_limit = 12;
+        #     ns_recursion_limit = 16;
+        #     cache_policy = {
+        #       default.positive_max_ttl = 86400;
+        #       A.positive_max_ttl = 3600;
+        #       AAAA.positive_max_ttl = 3600;
+        #     };
+        #   };
+        # }
         {
-          recursor = { 
-            roots = ./root.zone;
-            ns_cache_size = 1024;
-            record_cache_size = 1048576;
-            recursion_limit = 12;
-            ns_recursion_limit = 16;
-            cache_policy = {
-              default.positive_max_ttl = 86400;
-              A.positive_max_ttl = 3600;
-              AAAA.positive_max_ttl = 3600;
-            };
+          forward = {
+            name_servers = [{
+              socket_addr = "8.8.8.8:53";
+              protocol = { type = "udp"; };
+              trust_negative_responses = false;
+            }];
           };
         }
-        #{
-        #  forward = {
-        #    name_servers = [{
-        #      socket_addr = "8.8.8.8:53";
-        #      protocol = { type = "udp"; };
-        #      trust_negative_responses = false;
-        #    }];
-        #  };
-        #}
       ];
     };
   };
