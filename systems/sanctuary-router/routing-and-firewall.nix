@@ -11,6 +11,7 @@ let
     hash = "sha256-eVHvOHTOYIlAQ6N5mLioOYDtvhl/Qkd9/ut94UcOIps=";
   };
   musicAddr = "192.168.1.5";
+  musicIPv6AddrLower = "56b2:3ff:fe94:d30";
   gamingPCAddr = "192.168.1.2";
   wireguard-port = 51820;
 in
@@ -48,6 +49,22 @@ in
               *             IN      A      ${musicAddr}
             '';
           };
+          "sso.metamagical.house" = {
+            type = "primary";
+            # TODO: make this easier
+            file = pkgs.writeText "sso.metamagical.house.zone" ''
+              $TTL 3D
+              @               IN      SOA     ${config.router.dns.authority}. internal-dns.${config.router.dns.authority}. (
+                      199609203 ; Serial
+                      28800     ; Refresh
+                      7200      ; Retry
+                      604800    ; Expire
+                      86400)    ; Minimum TTL
+                    NS      ${config.router.dns.authority}.
+              @             IN      A      ${musicAddr}
+              *             IN      A      ${musicAddr}
+            '';
+          };
           # add in blocklists
           "." = {
             stores = lib.mkBefore [{
@@ -68,6 +85,8 @@ in
           {port = 3074; protocol = "tcp"; to = gamingPCAddr; comment = "destiny/steam --> gaming pc";}
           {port = 3097; protocol = "tcp"; to = gamingPCAddr; comment = "destiny/steam --> gaming pc";}
           {port = 5349; protocol = "tcp"; to = musicAddr; comment = "unifi remote management --> unifi controller";}
+          {port = 443; protocol = "tcp"; to = musicAddr; dport = 28443; comment = "sso.metamagical.house --> music";}
+          {port = 443; protocol = "udp"; to = musicAddr; dport = 28443; comment = "sso.metamagical.house --> music";}
         ];
         inetChains = {
           input = ''
@@ -77,7 +96,7 @@ in
             ip saddr @ext_wg_addrs counter accept;
             # don't allow iot devices access to the router, except for dns
             ip saddr @iot_addrs udp dport 53 accept;
-            ip saddr @iot_addrs counter drop;
+            ip saddr @iot_addrs counter drop comment "drop iot input to router";
             iifname @wan_faces udp dport ${toString wireguard-port} counter accept;
           '';
           # TODO: make the ipv6 forwards a more formalized system
@@ -112,6 +131,18 @@ in
             iifname @wan_faces oifname { "ext-wg" } ct state { established, related } counter accept comment "allow external established --> vpn";
           '';
         };
+        ip6Chains = ''
+          chain v6mangle {
+            type nat hook prerouting priority dstnat+10; policy accept;
+            # allow sso.metamagical.house through
+            iifname @wan_faces ip6 daddr & ::${musicIPv6AddrLower} == ::${musicIPv6AddrLower} tcp dport 443 counter dnat to :28443 comment "sso.metamagical.house --> music"
+            iifname @wan_faces ip6 daddr & ::${musicIPv6AddrLower} == ::${musicIPv6AddrLower} udp dport 443 counter dnat to :28443 comment "sso.metamagical.house --> music"
+          }
+          chain v6mangepost {
+            type nat hook postrouting priority srcnat+10; policy accept;
+            ct status dnat ip6 saddr & ::${musicIPv6AddrLower} == ::${musicIPv6AddrLower} tcp sport 8443 snat to :443 comment "sso.metamagical.house return"
+          }
+        '';
       };
 
       interfaces = {
@@ -185,6 +216,10 @@ in
               enable = true;
               domainName = "devices.home.metamagical.dev";
               pools = { "192.168.3.100 - 192.168.3.245" = {}; };
+              dynDNS = true;
+              reservations = [
+                { hw-address = "94:dd:f8:99:f9:fb"; ip-address = "192.168.3.2"; hostname = "printer"; }
+              ];
             };
           }];
         };
@@ -193,9 +228,9 @@ in
           type = "wireguard";
           netdev = {
             netdevConfig = {
-							Kind = "wireguard";
-							Name = "ext-wg";
-						};
+              Kind = "wireguard";
+              Name = "ext-wg";
+            };
             wireguardConfig = {
               PrivateKeyFile = "/etc/keys/wg/ext-wg-priv.key";
               ListenPort = wireguard-port;
@@ -206,6 +241,8 @@ in
               { PublicKey = "vXj2L8S7fb8liYWLRMdCJj57hsPWkePmVFtHHHIOYFM="; AllowedIPs = ["10.100.0.3"]; }
               # phone
               { PublicKey = "gv/EIInCeuS/xSIEnWXv/HyLyM5X2dj0c2FnpcjWDVk="; AllowedIPs = ["10.100.0.4"]; }
+              # e
+              { PublicKey = "M0nYEQskRnCSlXyIYKryAFiAaykBUXH40iijTdCKPjg="; AllowedIPs = ["10.100.0.5"]; }
             ];
           };
           addresses = [{

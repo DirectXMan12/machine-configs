@@ -28,7 +28,11 @@
 
 	services.oink = {
 		enable = true;
-		domains = [{ domain = "metamagical.house"; subdomain = "tunnel"; }];
+		domains = [
+			{ domain = "metamagical.house"; subdomain = "tunnel"; }
+			# ipv6 is set on the actual machine, since we're using the real ipv6 addr
+			{ domain = "metamagical.house"; subdomain = "sso"; skipIPv6 = true; }
+		];
 		secretApiKeyFile = "/etc/keys/oink.secret-key";
 		apiKeyFile = "/etc/keys/oink.key";
 	};

@@ -23,6 +23,8 @@ in
             protocol = mkOption { type = types.str; };
             port = mkOption { type = types.either types.int types.str; };
             comment = mkOption { type = types.str; default = ""; };
+            dport = mkOption { type = types.nullOr (types.either types.int types.str); default = null; };
+            flags = mkOption { type = types.listOf (types.enum ["random" "fully-random" "persistent"]); default = []; };
           };
         });
         default = [];
@@ -38,6 +40,10 @@ in
         default = {};
       };
       ipChains = mkOption {
+        type = types.str;
+        default = "";
+      };
+      ip6Chains = mkOption {
         type = types.str;
         default = "";
       };
@@ -143,7 +149,7 @@ in
 
               # accept anything that's being dnat-ed
               ct status dnat counter accept;
-              counter drop;
+              counter drop comment "drop anything not forwarded";
             };
 
             ${cfg.inetChains.extra}
@@ -167,6 +173,9 @@ in
                 ${builtins.concatStringsSep ", " (lists.unique (lists.map (forward: forward.to) cfg.portForwards))}
               };
             };
+            set host_addrs {
+              type ipv4_addr;
+            };
 
             chain portforwards {
               type nat hook prerouting priority dstnat+${toString cfg.priorityOffset}; policy accept;
@@ -174,7 +183,7 @@ in
               ${
                 builtins.concatStringsSep "\n" (
                   lists.map (forward:
-                    "${forward.protocol} dport ${toString forward.port} counter dnat to ${forward.to} comment \"${forward.comment}\";"
+                     "ip daddr @host_addrs ${forward.protocol} dport ${toString forward.port} counter dnat to ${forward.to}${if forward.dport != null then ":${toString forward.dport}" else ""} comment \"${forward.comment}\";"
                   ) cfg.portForwards
                 )
               }
@@ -191,6 +200,27 @@ in
             };
 
             ${cfg.ipChains}
+          '';
+        };
+        tables.ip6Extra = {
+          family = "ip6";
+          content = ''
+            set wan_faces {
+              type ifname;
+              flags constant;
+              elements = {
+                ${builtins.concatStringsSep ", " (attrsets.mapAttrsToList (name: _: name) wanFaces)}
+              }
+            };
+            set lan_faces {
+              type ifname;
+              flags constant;
+              elements = {
+                ${builtins.concatStringsSep ", " (attrsets.mapAttrsToList (name: _: name) lanFaces)}
+              }
+            };
+
+            ${cfg.ip6Chains}
           '';
         };
       };
