@@ -37,6 +37,9 @@
 		apiKeyFile = "/etc/keys/oink.key";
 	};
 
+	# only allow admins on the router
+	local.server.pam.login-groups = ["pam_admins"];
+
 	# TODO: wireguard
 	# TODO: dhcp-v4
 	# TODO: ipv6 networking check?
