@@ -1,5 +1,8 @@
 { config, pkgs, lib, ... }:
 
+# if this all doesn't reload properly, try restarting
+# nscd.service, which caches name results
+# TODO: make this automatic when kanidm config gets changed
 let
 	cfg = config.local.server.pam;
 in
