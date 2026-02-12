@@ -28,6 +28,10 @@
 			isSystemUser = true;
 			group = "calibre";
 		};
+		copyparty = {
+			isSystemUser = true;
+			group = "copyparty";
+		};
 	};
 
 	users.groups = {
@@ -37,6 +41,12 @@
 		};
 		calibre = {
 			members = ["calibre"];
+		};
+		copyparty = {
+			members = ["copyparty"];
+		};
+		copyparty-connect = {
+			members = ["copyparty" "nginx"];
 		};
 	};
 
@@ -138,9 +148,109 @@
 		secretApiKeyFile = "/etc/keys/oink.secret-key";
 	};
 
+	#### copyparty, for kavita uploads and arbitrary downloads
+	systemd.services.copyparty = {
+		name = "copyparty.service";
+		description = "copyparty!";
+		wantedBy = [ "multi-user.target" ];
+		after = [ "network.target" "kanidm.service" ];
+		serviceConfig = {
+			# be paranoid
+			CapabilityBoundingSet = [];
+			DeviceAllow = "";
+			LockPersonality = true;
+			PrivateDevices = true;
+			PrivateMounts = true;
+			PrivateUsers = false;
+			PrivateGroups = false;
+			PrivateTmp = true;
+			ProcSubset = "pid";
+			ProtectClock = true;
+			ProtectHome = true;
+			ProtectHostname = true;
+			ProtectControlGroups = true;
+			ProtectKernelLogs = true;
+			ProtectKernelModules = true;
+			ProtectKernelTunables = true;
+			ProtectProc = "invisible";
+			RestrictAddressFamilies = [ "AF_UNIX" ];
+			RestrictNamespaces = true;
+			RestrictRealtime = true;
+			RestrictSUIDSGID = true;
+			SystemCallArchitectures = "native";
+			# SystemCallFilter = [
+			# 	"@system-service"
+			# 	"~@privileged @resources @setuid @keyring"
+			# ];
+			TemporaryFileSystem = "/:ro";
+			# allow some stuff
+			BindPaths = [
+				# to upload to kavita
+				"/books"
+				# to upload to roon when off-network
+				"/roon-music/roon-music/local-stuff"
+			];
+			BindReadOnlyPaths = [
+				# other stuff
+				"/web-root/house/dont-copy-this-floppy"
+				# copyparty itself
+				"/nix/store"
+				# to get the group name
+				"/etc/group"
+			];
+			# general settings
+			ExecStart = "${pkgs.copyparty}/bin/copyparty  -c ${pkgs.writeText "copyparty.cfg" ''
+				[global]
+					# indexing
+					e2dsa
+					# allow seeing dotfiles
+					ed
+					
+					# auth proxy will inject these
+					idp-h-usr: x-idp-user
+					idp-h-grp: x-idp-group
+					idp-gsep: %
+					idp-login: https://sso.metamagical.dev
+					hist: /var/lib/copyparty/hist
+
+					# listen on uds
+					i: unix:770:copyparty-connect:/run/copyparty/party.sock
+
+					[/music]
+						/roon-music/roon-music/local-stuff
+						accs:
+							rw: directxman12, @uploaders
+					[/books]
+						/books
+						accs:
+							rw: directxman12, @uploaders
+					[/dont-copy-this-floppy]
+						/web-root/house/dont-copy-this-floppy
+						accs:
+							r: @acct
+			''}";
+			User = "copyparty";
+			Group = "copyparty";
+			RuntimeDirectory = "copyparty";
+			StateDirectory = "copyparty";
+		};
+		environment = {
+			# it wants to store state in the config dir???
+			XDG_CONFIG_HOME = "/var/lib/copyparty";
+		};
+	};
+
 	#### internal site hosting
 	services.nginx = {
 		enable = true;
+		upstreams = {
+			"copyparty_uds" = {
+				servers = { "unix:/run/copyparty/party.sock" = { fail_timeout = "1s"; }; };
+				extraConfig = ''
+					keepalive 1;
+				'';
+			};
+		};
 		virtualHosts = {
 			"5etools.house.metamagical.dev" = {
 				serverAliases = [ "5etools" ];
@@ -206,6 +316,49 @@
 					proxy_set_header	Host $host;
 					proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for; aio threads;
 					proxy_set_header        X-Forwarded-Proto $scheme;
+
+					gzip on;
+					gzip_vary on;
+					gzip_min_length 1000;
+					gzip_proxied any;
+					gzip_types text/plain text/css text/xml application/xml text/javascript application/x-javascript image/svg+xml;
+
+				'';
+				acmeRoot = null; # manual setup below
+				useACMEHost = "home.metamagical.dev";
+				addSSL = true;
+			};
+			"copyparty.house.metamagical.dev" = {
+				serverAliases = [ "copyparty" ];
+				locations."/" = {
+					proxyPass = "http://copyparty_uds";
+					extraConfig = ''
+						proxy_redirect off;
+						# disable buffering (next 4 lines)
+						proxy_http_version 1.1;
+						client_max_body_size 0;
+						proxy_buffering off;
+						proxy_request_buffering off;
+						# improve download speed from 600 to 1500 MiB/s
+						proxy_buffers 32 8k;
+						proxy_buffer_size 16k;
+						proxy_busy_buffers_size 24k;
+					'';
+				};
+				extraConfig = ''
+					proxy_set_header Connection "Keep-Alive";
+					proxy_set_header	Host $host;
+					proxy_set_header X-Real-IP $remote_addr;
+					proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+					proxy_set_header        X-Forwarded-Proto $scheme;
+
+					aio threads;
+
+					# bigger uploads
+					client_max_body_size 1024M;
+					client_header_timeout 610m;
+					client_body_timeout 610m;
+					send_timeout 610m;
 
 					gzip on;
 					gzip_vary on;
