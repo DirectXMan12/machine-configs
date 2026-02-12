@@ -7,8 +7,8 @@ let
   # researcher (TODO: find link) was that light was basically just as good as
   # normal, but with slightly less risk of false positives
   hageziLight = pkgs.fetchurl {
-    url = "https://gitlab.com/hagezi/mirror/-/raw/main/dns-blocklists/domains/light.txt";
-    hash = "sha256-eVHvOHTOYIlAQ6N5mLioOYDtvhl/Qkd9/ut94UcOIps=";
+    url = "https://gitlab.com/hagezi/mirror/-/raw/ccd0cffba940c815ebb7c54e5c3bdc3105d95c29/dns-blocklists/domains/light.txt";
+    hash = "sha256-bG72tCEx4s2315tcFDktQtpP9JmoVCVt1KOzzv3a6Yo=";
   };
   musicAddr = "192.168.1.5";
   musicIPv6AddrLower = "56b2:3ff:fe94:d30";
