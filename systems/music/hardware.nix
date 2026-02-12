@@ -29,7 +29,19 @@
 		};
 
 	fileSystems."/roon-music" =
-		{ device = "/dev/disk/by-uuid/ad097048-5f1e-4e22-8bb2-4e44631f76aa";
+		{ device = "/dev/ssd/music";
+			fsType = "ext4";
+		};
+	fileSystems."/books" =
+		{ device = "/dev/ssd/books";
+			fsType = "ext4";
+		};
+	fileSystems."/web-root" =
+		{ device = "/dev/ssd/web-misc";
+			fsType = "ext4";
+		};
+	fileSystems."/service-backups" =
+		{ device = "/dev/ssd/service-backups";
 			fsType = "ext4";
 		};
 
