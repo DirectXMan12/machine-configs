@@ -57,8 +57,9 @@ in
 						service_account_token_path = "/etc/kanidm/unixd_token";
 
 						# stick admin users in wheel if enabled
-						map_group = mkIf (cfg.admin-group != null) [
-							{ local = "wheel"; "with" = cfg.admin-group; }
+						map_group = mkMerge [
+							(mkIf (cfg.admin-group != null) [ { local = "wheel"; "with" = cfg.admin-group; } ])
+						  (map (group: { local = "users"; "with" = group; }) cfg.login-groups)
 						];
 					};
 				};
