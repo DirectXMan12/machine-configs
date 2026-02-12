@@ -137,6 +137,15 @@
 		package = pkgs.kanidm_1_8;
 	};
 
+	#### set sso.metamagical.house externally
+	services.oink = {
+		enable = true;
+		# ipv4 is set on the router since we're using nat
+		domains = [{ domain = "metamagical.house"; subdomain = "sso"; skipIPv4 = true; }];
+		apiKeyFile = "/etc/keys/oink.key";
+		secretApiKeyFile = "/etc/keys/oink.secret-key";
+	};
+
 	#### internal site hosting
 	services.nginx = {
 		enable = true;
@@ -288,7 +297,16 @@
 				};
 				acmeRoot = null; # manual setup below
 				useACMEHost = "sso.metamagical.house";
-				addSSL = true;
+				onlySSL = true;
+				listen = [
+					# internal
+					{ addr = "0.0.0.0"; port = 443; ssl = true; }
+					{ addr = "[::0]"; port = 443; ssl = true; }
+
+					# external
+					{ addr = "0.0.0.0"; port = 28443; ssl = true; }
+					{ addr = "[::0]"; port = 28443; ssl = true; }
+				];
 				extraConfig = ''
 					gzip on;
 					gzip_vary on;
@@ -432,7 +450,12 @@
 				vlanConfig.Id = 2;
 			};
 		};
+		# use stable ipv6 addresses only (part 1)
+		config.networkConfig.IPv6PrivacyExtensions = false;	
 	};
+
+	# use stable ipv6 addresses only (part 2)
+	networking.tempAddresses = "disabled";
 
 	# only on the specified adapters
 	networking.useDHCP = false;
