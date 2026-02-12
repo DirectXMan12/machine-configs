@@ -77,6 +77,14 @@ in
 				group = "root";
 			};
 
+			systemd.services.nscd = lib.mkIf config.services.nscd.enable {
+				after = ["kanidm-unixd.service"];
+				wants = ["kanidm-unixd.service"];
+				# restart when kanidm is restarted (will stop when it stops too, which
+				# is not great, but eh)
+				partOf = ["kanidm-unixd.service"]; 
+			};
+
 			# Enable the OpenSSH daemon.
 			services.openssh.enable = mkDefault config.local.server.enable;
 		};
