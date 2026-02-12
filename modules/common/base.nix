@@ -28,5 +28,6 @@
 		wget
 		curl
 		git # needed for managing this config
+		jujutsu  # nicer for managing this config
 	];
 }
