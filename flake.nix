@@ -51,6 +51,7 @@
 					./modules/utils/allowedUnfree-polyfill.nix
 					./modules/common
 					./modules/user-facing
+					./modules/servers
 					./modules/cache
 					./systems/${name}
 					({ ... }: { networking.hostName = name; })

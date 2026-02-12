@@ -112,7 +112,6 @@
 	#### auth
 	services.kanidm = {
 		enableServer = true;
-		# TODO: PAM?
 		serverSettings = {
 			version = "2";
 
@@ -134,7 +133,6 @@
 				path = "/service-backups/kanidm/";
 			};
 		};
-		package = pkgs.kanidm_1_8;
 	};
 
 	#### set sso.metamagical.house externally
@@ -357,10 +355,6 @@
 			'';
 		serviceConfig.LoadCredential = lib.mkAfter [ "oidc_secret:/web-root/kavita/oidc-secret.key" ];
 	};
-
-	#### misc
-	# Enable the OpenSSH daemon.
-	services.openssh.enable = true;
 
 	### networking setup
 	systemd.network = {
