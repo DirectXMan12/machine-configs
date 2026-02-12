@@ -19,6 +19,11 @@ with lib;
 			default = "networkmanager";
 			description = "which networking setup to use";
 		};
+		local.unstable = mkOption {
+			type = types.bool;
+			default = false;
+			description = "whether or not this is running on unstable, for breaking nixos configuration option changes";
+		};
 	};
 
 	# TODO: refactor this into a separate module

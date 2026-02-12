@@ -47,9 +47,12 @@ in
 					allow_local_account_override = ["directxman12"];
 
 					# automatically provision people in this group
-					pam_allowed_login_groups = cfg.login-groups;
+
+					# duplicated cause the nixos 25.11 setting hasn't caught up to the
+					# kanidm 2.0 format, but is required and in unstable it's disallowed
+					# and only the new option is allowed
+					pam_allowed_login_groups = lib.mkIf (!config.local.unstable) cfg.login-groups;
 					kanidm = {
-						# duplicated cause the nixos setting hasn't caught up to the kanidm 2.0 format
 						pam_allowed_login_groups = cfg.login-groups;
 						service_account_token_path = "/etc/kanidm/unixd_token";
 

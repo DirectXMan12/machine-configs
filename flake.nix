@@ -54,6 +54,7 @@
 					./modules/servers
 					./modules/cache
 					./systems/${name}
+					({ config, ... }: { config.local.unstable = unstable; })
 					({ ... }: { networking.hostName = name; })
 					({ config, pkgs, lib, ... }: {
 						config.nixpkgs.overlays = lib.mkMerge [
