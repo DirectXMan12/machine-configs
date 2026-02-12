@@ -190,36 +190,6 @@
 					proxy_set_header Referer "";
 				'';
 			};
-			"calibre.house.metamagical.dev" = {
-				serverAliases = [ "calibre" ];
-				locations."/" = {
-					# calibre server
-					proxyPass = "http://127.0.0.1:65002";
-					extraConfig = ''
-						client_max_body_size 256M;
-					'';
-				};
-				locations."/web" = {
-					# calibre web
-					proxyPass = "http://127.0.0.1:65003";
-					extraConfig = ''
-						proxy_set_header X-Script-Name /web;
-						rewrite '^/web(/.*)?' /$1 break;
-						client_max_body_size 256M;
-					'';
-
-				};
-				extraConfig = ''
-					gzip on;
-					gzip_vary on;
-					gzip_min_length 1000;
-					gzip_proxied any;
-					gzip_types text/plain text/css text/xml application/xml text/javascript application/x-javascript image/svg+xml;
-				'';
-				acmeRoot = null; # manual setup below
-				useACMEHost = "home.metamagical.dev";
-				addSSL = true;
-			};
 			"kavita.house.metamagical.dev" = {
 				serverAliases = [ "kavita" ];
 				locations."/" = {
@@ -361,28 +331,6 @@
 		};
 	};
 
-	##### calibre
-	services.calibre-server = {
-		enable = true;
-		host = "127.0.0.1";
-		port = 65002;
-		libraries = ["/web-root/calibre/library"];
-		user = "calibre";
-		auth = {
-			enable = true;
-			mode = "basic";
-			userDb = "/web-root/calibre/users.db";
-		};
-	};
-	services.calibre-web = {
-		enable = true;
-		listen = {
-			ip = "127.0.0.1";
-			port = 65003;
-		};
-		options.calibreLibrary = "/web-root/calibre/library";
-		user = "calibre";
-	};
 	###### kavita (calibre-like, but with better support for manga)
 	services.kavita = {
 		package = pkgs.unstable.kavita;
