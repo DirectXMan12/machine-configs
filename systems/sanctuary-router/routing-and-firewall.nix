@@ -219,6 +219,7 @@ in
               dynDNS = true;
               reservations = [
                 { hw-address = "94:dd:f8:99:f9:fb"; ip-address = "192.168.3.2"; hostname = "printer"; }
+                { hw-address = "68:fe:71:88:ad:58"; ip-address = "192.168.3.3"; hostname = "himill-d1s"; }
               ];
             };
           }];
