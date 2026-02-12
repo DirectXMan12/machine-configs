@@ -1,5 +1,8 @@
 builds:
-  include:
-  - nixosConfigurations.music
-  - nixosConfigurations.sanctuary-router
-  branch: main
+  - branch: main
+    include:
+    - nixosConfigurations.music
+    - nixosConfigurations.sanctuary-router
+  - branch: "staging/router"
+    include:
+    - nixosConfigurations.sanctuary-router
