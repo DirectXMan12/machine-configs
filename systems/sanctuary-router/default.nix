@@ -13,7 +13,6 @@
 	# actual system stuff
 	services.openssh = {
 		enable = true;
-		settings.PermitRootLogin = "yes"; # TODO: temporary
 	};
 	networking.hostName = "sanctuary-router";
 
