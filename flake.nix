@@ -58,6 +58,7 @@
 					./modules/cache
 					./shared-modules/serving
 					./shared-modules/kanidm
+					./shared-modules/copyparty
 					./systems/${name}
 					({ config, ... }: { config.local.unstable = unstable; })
 					({ ... }: { networking.hostName = name; })
@@ -132,6 +133,7 @@
 			nixosModules.default.imports = [
 				./shared-modules/serving
 				./shared-modules/kanidm
+				./shared-modules/copyparty
 			];
 		};
 }

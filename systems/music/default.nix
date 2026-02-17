@@ -114,7 +114,10 @@
 	services.oink = {
 		enable = true;
 		# ipv4 is set on the router since we're using nat
-		domains = [{ domain = "metamagical.house"; subdomain = "sso"; skipIPv4 = true; }];
+		domains = [
+			{ domain = "metamagical.house"; subdomain = "sso"; skipIPv4 = true; }
+			{ domain = "metamagical.house"; subdomain = "files"; skipIPv4 = true; }
+		];
 		apiKeyFile = "/etc/keys/oink.key";
 		secretApiKeyFile = "/etc/keys/oink.secret-key";
 	};
@@ -183,6 +186,42 @@
 			# `name = *, domain = home.metamagical.dev`, not `name = *.home, domain = metamagical.dev`.
 			"sso.metamagical.house".dnsResolver = "8.8.8.8:53";
 		};
+	};
+
+	###### copyparty, for managing afh music uploads and kavita
+	metamagical.copyparty = {
+		enable = true;
+		domain = "files.metamagical.house";
+		volumes = {
+			"/music" = {
+				dir = "/roon-music/roon-music/local-stuff";
+				extraConfig = ''
+				accs:
+					rw: directxman12, @uploader
+				'';
+			};
+			"/books" = {
+				dir = "/books";
+				extraConfig = ''
+				accs:
+					rw: directxman12, @uploader
+				'';
+			};
+			"/dont-copy-this-floppy" = {
+				dir = "/web-root/house/dont-copy-this-floppy";
+				extraConfig = ''
+				accs:
+					r: @viewer
+					w: directxman12, @floppysender
+				'';
+			};
+		};
+		globalConfig = ''
+		# indexing
+		e2dsa
+		# allow seeing dotfiles
+		ed
+		'';
 	};
 
 	###### kavita (calibre-like, but with better support for manga)
