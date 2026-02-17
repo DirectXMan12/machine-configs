@@ -117,6 +117,7 @@
 		domains = [
 			{ domain = "metamagical.house"; subdomain = "sso"; skipIPv4 = true; }
 			{ domain = "metamagical.house"; subdomain = "files"; skipIPv4 = true; }
+			{ domain = "metamagical.house"; subdomain = "kavita"; skipIPv4 = true; }
 		];
 		apiKeyFile = "/etc/keys/oink.key";
 		secretApiKeyFile = "/etc/keys/oink.secret-key";
@@ -158,9 +159,9 @@
 		# internal serving for kanidm (legacy reasons)
 		bind-to.tcp = lib.mkAfter [{ addr = "[::]:28443"; }];
 		domains = {
-			"kavita.house.metamagical.dev" = {
+			"kavita.metamagical.house" = {
 				backends.http = [{ addr = "127.0.0.1:65004"; }];
-				tls.useACMEHost = "home.metamagical.dev";
+				tls.useACMEHost = "kavita.metamagical.house";
 				# does its own oidc
 			};
 		};
@@ -179,6 +180,14 @@
 				# (correctly), but when acme-go tries to split the domain it thinks that means it should try for
 				# `name = *, domain = home.metamagical.dev`, not `name = *.home, domain = metamagical.dev`.
 				dnsResolver = "8.8.8.8:53";
+			};
+
+			"kavita.metamagical.house" = {
+				group = "proxy-in-anger";
+				domain = "kavita.metamagical.house";
+				dnsProvider = "porkbun";
+				environmentFile = "/var/lib/secrets/acme.secret";
+				reloadServices = ["proxy-in-anger.service"];
 			};
 
 			# TODO: this is needed because internal dns returns a SOA record for home.metamagical.dev
