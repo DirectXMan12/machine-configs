@@ -96,6 +96,7 @@
 				cfg = {
 					local.userFacing = false;
 					local.networking = "systemd";
+					local.cache.enable = true;
 				};
 			};
 
