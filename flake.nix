@@ -16,9 +16,12 @@
 		};
 
 		nixpkgs-wayland.inputs.nixpkgs.follows = "nixpkgs-unstable";
+
+    proxy-in-anger.url = "git+https://tangled.org/directxman12.dev/proxy-in-anger?ref=main";
+    proxy-in-anger.inputs.nixpkgs.follows = "nixpkgs";
 	};
 
-	outputs = { self, nixpkgs, nixos-hardware, nixpkgs-unstable, lanzaboote, nixos-sbc, ... }@attrs:
+	outputs = { self, nixpkgs, nixos-hardware, nixpkgs-unstable, lanzaboote, nixos-sbc, proxy-in-anger, ... }@attrs:
 		let
 			system = "x86_64-linux";
 			overlays = {
@@ -53,6 +56,8 @@
 					./modules/user-facing
 					./modules/servers
 					./modules/cache
+					./shared-modules/serving
+					./shared-modules/kanidm
 					./systems/${name}
 					({ config, ... }: { config.local.unstable = unstable; })
 					({ ... }: { networking.hostName = name; })
@@ -60,6 +65,12 @@
 						config.nixpkgs.overlays = lib.mkMerge [
 							(lib.mkIf config.local.userFacing [ overlays.unstable-with-sway ])
 							(lib.mkIf (!config.local.userFacing) [ overlays.unstable-only ])
+							[
+								# TODO: is there a better way to do this? maybe the overlays output?
+								(final: prev: {
+									proxy-in-anger = proxy-in-anger.packages.${prev.stdenv.hostPlatform.system}.default;
+								})
+							]
 						];
 					})
 					({ ... }: cfg)
@@ -117,5 +128,10 @@
 					local.cache.enable = true;
 				};
 			};
+
+			nixosModules.default.imports = [
+				./shared-modules/serving
+				./shared-modules/kanidm
+			];
 		};
 }

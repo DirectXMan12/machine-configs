@@ -6,3 +6,6 @@ builds:
   - branch: "staging/router"
     include:
     - nixosConfigurations.sanctuary-router
+  - branch: "staging/music"
+    include:
+    - nixosConfigurations.music

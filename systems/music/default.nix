@@ -84,10 +84,6 @@
 		# roon arc
 		55000
 
-		# 5etools & other sites
-		80
-		443
-
 		# unifi controller web
 		8443
 
@@ -104,28 +100,13 @@
 	networking.firewall.checkReversePath = "loose"; # weird dual nic setup
 
 	#### auth
+	metamagical.sso.server = {
+		enable = true;
+		domain = "sso.metamagical.house";
+	};
 	services.kanidm = {
-		enableServer = true;
-		serverSettings = {
-			version = "2";
-
-			## domain
-			# use these so that we can choose to make things public eventually
-			origin = "https://sso.metamagical.house";
-			domain = "sso.metamagical.house";
-
-			## tls
-			# set up in the acme client below from letsencrypt
-			tls_key = "/var/lib/kanidm/key.pem";
-			tls_chain = "/var/lib/kanidm/fullchain.pem";
-
-			## misc
-			bindaddress = "[::1]:18443";
-			http_client_address_info.x-forward-for = ["::1" "127.0.0.1"];
-
-			online_backup = {
-				path = "/service-backups/kanidm/";
-			};
+		serverSettings.online_backup = {
+			path = "/service-backups/kanidm/";
 		};
 	};
 
@@ -139,154 +120,45 @@
 	};
 
 	#### internal site hosting
-	services.nginx = {
+	metamagical.serving = {
 		enable = true;
-		virtualHosts = {
-			"5etools.house.metamagical.dev" = {
-				serverAliases = [ "5etools" ];
-				root = "/web-root/5etools";
-				acmeRoot = null; # manual setup below
-				useACMEHost = "home.metamagical.dev";
-				addSSL = true;
+		static-sites = let
+			oidc-cfg = client: scopes: {
+				discovery-url-base = "https://sso.metamagical.house/oauth2/openid/${client}/";
+				client-id = client;
+				logout-url = "https://sso.metamagical.house";
+				client-secret-path = "/var/lib/secrets/${client}.client-secret";
+				scopes.required = scopes;
 			};
-			"house.metamagical.dev" = {
-				serverAliases = [ "house" ];
-				root = "/web-root/house";
-				acmeRoot = null; # manual setup below
-				useACMEHost = "home.metamagical.dev";
-				addSSL = true;
-				locations."/dont-copy-this-floppy" = {
-					extraConfig = ''
-						autoindex on;
-					'';
+			headers = {
+				x-forwarded-for = "x-forwarded-for";
+				x-forwarded-proto = "x-forwarded-proto";
+			};
+			generic-hosted = client: {
+				oidc-auth = oidc-cfg client ["view"];
+				manage-headers = headers;
+				tls.useACMEHost = "home.metamagical.dev";
+			};
+		in
+			{
+				"5etools.house.metamagical.dev" = {
+					root = "/web-root/5etools";
+					proxy-config = generic-hosted "five-e-tools";
+				};
+				"house.metamagical.dev" = {
+					root = "/web-root/house";
+					proxy-config = generic-hosted "main-site";
 				};
 			};
-			"ui.house.metamagical.dev" = {
-				serverAliases = [ "ui" ];
-				acmeRoot = null; # manual setup below
-				useACMEHost = "home.metamagical.dev";
-				addSSL = true;
-				locations."/" = {
-					proxyPass = "https://127.0.0.1:8443";
-				};
-				locations."/inform" = {
-					proxyPass = "http://127.0.0.1:8080";
-				};
-				locations."/wss" = {
-					proxyPass = "https://127.0.0.1:8443";
-				};
-				extraConfig = ''
-					proxy_ssl_verify off;
-
-					proxy_set_header Origin "";
-					proxy_set_header Referer "";
-				'';
-			};
+	};
+	services.proxy-in-anger = {
+		# internal serving for kanidm (legacy reasons)
+		bind-to.tcp = lib.mkAfter [{ addr = "[::]:28443"; }];
+		domains = {
 			"kavita.house.metamagical.dev" = {
-				serverAliases = [ "kavita" ];
-				locations."/" = {
-					# calibre server
-					proxyPass = "http://127.0.0.1:65004";
-					extraConfig = ''
-						client_max_body_size 256M;
-					'';
-				};
-				locations."/hubs/" = {
-					proxyPass = "http://127.0.0.1:65004";
-					extraConfig = ''
-						# Headers to proxy websocket connections
-						proxy_http_version 1.1;
-						proxy_set_header Upgrade $http_upgrade;
-						proxy_set_header Connection "Upgrade"; 
-					'';
-				};
-				extraConfig = ''
-					# The following configurations must be configured when proxying to Kavita
-					# Host and X headers
-					proxy_set_header	Host $host;
-					proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for; aio threads;
-					proxy_set_header        X-Forwarded-Proto $scheme;
-
-					gzip on;
-					gzip_vary on;
-					gzip_min_length 1000;
-					gzip_proxied any;
-					gzip_types text/plain text/css text/xml application/xml text/javascript application/x-javascript image/svg+xml;
-
-				'';
-				acmeRoot = null; # manual setup below
-				useACMEHost = "home.metamagical.dev";
-				addSSL = true;
-			};
-			# TODO: not working
-			"plex.house.metamagical.dev" = {
-				serverAliases = [ "plex" ];
-				locations."/" = {
-					proxyPass = "https://127.0.0.1:32400";
-				};
-				extraConfig = ''
-					gzip on;
-					gzip_vary on;
-					gzip_min_length 1000;
-					gzip_proxied any;
-					gzip_types text/plain text/css text/xml application/xml text/javascript application/x-javascript image/svg+xml;
-					# don't break phone camera upload
-					client_max_body_size 100M;
-
-					proxy_set_header Host $host;
-					proxy_set_header X-Real-IP $remote_addr;
-					proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-					proxy_set_header X-Forwarded-Proto $scheme;
-					proxy_set_header Sec-WebSocket-Extensions $http_sec_websocket_extensions;
-					proxy_set_header Sec-WebSocket-Key $http_sec_websocket_key;
-					proxy_set_header Sec-WebSocket-Version $http_sec_websocket_version;
-
-					#Websockets
-					proxy_http_version 1.1;
-					proxy_set_header Upgrade $http_upgrade;
-					proxy_set_header Connection "Upgrade";
-
-					proxy_redirect off;
-					proxy_buffering off;
-				'';
-				acmeRoot = null; # manual setup below
-				useACMEHost = "home.metamagical.dev";
-				addSSL = true;
-			};
-			"sso.metamagical.house" = {
-				locations."/" = {
-					proxyPass = "https://${config.services.kanidm.serverSettings.bindaddress}";
-				};
-				acmeRoot = null; # manual setup below
-				useACMEHost = "sso.metamagical.house";
-				onlySSL = true;
-				listen = [
-					# internal
-					{ addr = "0.0.0.0"; port = 443; ssl = true; }
-					{ addr = "[::0]"; port = 443; ssl = true; }
-
-					# external
-					{ addr = "0.0.0.0"; port = 28443; ssl = true; }
-					{ addr = "[::0]"; port = 28443; ssl = true; }
-				];
-				extraConfig = ''
-					gzip on;
-					gzip_vary on;
-					gzip_min_length 1000;
-					gzip_proxied any;
-					gzip_types text/plain text/css text/xml application/xml text/javascript application/x-javascript image/svg+xml;
-
-					proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-				'';
-			};
-			"_" = {
-				default = true;
-				extraConfig = ''
-					return 404;
-				'';
-				acmeRoot = null; # manual setup below
-				useACMEHost = "home.metamagical.dev";
-				addSSL = true;
+				backends.http = [{ addr = "127.0.0.1:65004"; }];
+				tls.useACMEHost = "home.metamagical.dev";
+				# does its own oidc
 			};
 		};
 	};
@@ -295,7 +167,7 @@
 		defaults.email = "directxman12+acme@metamagical.dev";
 		certs = {
 			"home.metamagical.dev" = {
-				group = "nginx";
+				group = "proxy-in-anger";
 				domain = "*.home.metamagical.dev";
 				dnsProvider = "porkbun";
 				environmentFile = "/var/lib/secrets/acme.secret";
@@ -305,21 +177,11 @@
 				# `name = *, domain = home.metamagical.dev`, not `name = *.home, domain = metamagical.dev`.
 				dnsResolver = "8.8.8.8:53";
 			};
-			"sso.metamagical.house" = {
-				group = "nginx";
-				domain = "sso.metamagical.house";
-				dnsProvider = "porkbun";
-				environmentFile = "/var/lib/secrets/acme.secret";
-				# TODO: this is needed because internal dns returns a SOA record for home.metamagical.dev
-				# (correctly), but when acme-go tries to split the domain it thinks that means it should try for
-				# `name = *, domain = home.metamagical.dev`, not `name = *.home, domain = metamagical.dev`.
-				dnsResolver = "8.8.8.8:53";
-				postRun = ''
-					cp -Lv {key,fullchain}.pem /var/lib/kanidm
-					chown kanidm:kanidm /var/lib/kanidm/{key,fullchain}.pem
-				'';
-				reloadServices = ["kanidm.service"];
-			};
+
+			# TODO: this is needed because internal dns returns a SOA record for home.metamagical.dev
+			# (correctly), but when acme-go tries to split the domain it thinks that means it should try for
+			# `name = *, domain = home.metamagical.dev`, not `name = *.home, domain = metamagical.dev`.
+			"sso.metamagical.house".dnsResolver = "8.8.8.8:53";
 		};
 	};
 
