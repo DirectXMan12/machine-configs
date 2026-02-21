@@ -39,7 +39,9 @@
 	};
 
 	# only allow admins on the router
-	local.server.pam.login-groups = ["pam_admins"];
+	metamagical.sso = {
+		pam.login-groups = ["pam_admins"];
+	};
 
 	# TODO: wireguard
 	# TODO: dhcp-v4

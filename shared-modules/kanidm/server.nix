@@ -13,7 +13,7 @@ in
 			};
 		};
 	};
-	config = {
+	config = lib.mkIf cfg.enable {
 		services.kanidm = {
 			enableServer = true;
 			serverSettings = {

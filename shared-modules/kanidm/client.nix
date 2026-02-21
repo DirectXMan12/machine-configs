@@ -23,7 +23,7 @@ in
 				};
 				server = mkOption {
 					type = types.str;
-					default = "https://${config.metamagical.sso.server.domain}";
+					default = mkIf config.metamagical.sso.server.enable "https://${config.metamagical.sso.server.domain}";
 					description = "talk to this kanidm instance";
 				};
 				config-version = mkOption {
