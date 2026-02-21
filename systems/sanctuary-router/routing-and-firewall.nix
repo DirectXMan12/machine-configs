@@ -161,7 +161,10 @@ in
             v4.dhcp = {
               enable = true;
               domainName = "home.metamagical.dev";
-              searchPath = ["home.metamagical.dev" "house.metamagical.dev"];
+              # NB: `house` is not in the search path because a) it has
+              # wildcard dns, and b) short-urls will be handled by the golink
+              # proxy
+              searchPath = ["home.metamagical.dev"];
               pools = { "192.168.1.100 - 192.168.1.245" = {}; };
               dynDNS = true;
               reservations = [
