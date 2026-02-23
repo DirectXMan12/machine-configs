@@ -117,7 +117,7 @@
 		domains = [
 			{ domain = "metamagical.house"; subdomain = "sso"; skipIPv4 = true; }
 			# ipv4 is handled on the router, everything else is a cname
-			{ domain = "metamagical.house"; subdomain = "_services"; skipIPv4 = true; }
+			{ domain = "metamagical.house"; subdomain = "services"; skipIPv4 = true; }
 		];
 		apiKeyFile = "/etc/keys/oink.key";
 		secretApiKeyFile = "/etc/keys/oink.secret-key";

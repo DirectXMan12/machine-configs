@@ -32,7 +32,7 @@
 			# ipv6 is set on the actual machine, since we're using the real ipv6 addr
 			{ domain = "metamagical.house"; subdomain = "sso"; skipIPv6 = true; }
 			# set this up so we can just have cnames, since basically everything works like sso
-			{ domain = "metamagical.house"; subdomain = "_services"; skipIPv6 = true; }
+			{ domain = "metamagical.house"; subdomain = "services"; skipIPv6 = true; }
 		];
 		secretApiKeyFile = "/etc/keys/oink.secret-key";
 		apiKeyFile = "/etc/keys/oink.key";
