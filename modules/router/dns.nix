@@ -78,29 +78,29 @@ let
     "." = {
       type = "external";
       stores = [
-        # {
-        #   recursor = { 
-        #     roots = ./root.zone;
-        #     ns_cache_size = 1024;
-        #     record_cache_size = 1048576;
-        #     recursion_limit = 12;
-        #     ns_recursion_limit = 16;
-        #     cache_policy = {
-        #       default.positive_max_ttl = 86400;
-        #       A.positive_max_ttl = 3600;
-        #       AAAA.positive_max_ttl = 3600;
-        #     };
-        #   };
-        # }
         {
-          forward = {
-            name_servers = [{
-              socket_addr = "8.8.8.8:53";
-              protocol = { type = "udp"; };
-              trust_negative_responses = false;
-            }];
+          recursor = { 
+            roots = ./root.zone;
+            ns_cache_size = 1024;
+            record_cache_size = 1048576;
+            recursion_limit = 12;
+            ns_recursion_limit = 16;
+            cache_policy = {
+              default.positive_max_ttl = 86400;
+              A.positive_max_ttl = 3600;
+              AAAA.positive_max_ttl = 3600;
+            };
           };
         }
+        # {
+        #   forward = {
+        #     name_servers = [{
+        #       socket_addr = "8.8.8.8:53";
+        #       protocol = { type = "udp"; };
+        #       trust_negative_responses = false;
+        #     }];
+        #   };
+        # }
       ];
     };
   };
@@ -360,16 +360,17 @@ in
         settings = {};
         quiet = lib.mkDefault true;
         package = pkgs.rustPlatform.buildRustPackage rec {
-          version = "0.26.0-alpha.1";
+          version = "0.26.0-alpha.1-2";
           pname = "hickory-dns";
 
           src = pkgs.fetchFromGitHub {
             owner = "hickory-dns";
             repo = "hickory-dns";
-            tag = "v${version}";
-            hash = "sha256-tXBGnrD0KrIhRKBEeq+jLSgFWHFTRUU6AGiAGEALIwk=";
+            #tag = "v${version}";
+            rev = "9f4b15ea55aeb4b28cdd7cbf23da1c2a0a551781";
+            hash = "sha256-RH7ysddoQeO2KnVg5B4B9kqPFcabvJkvFL5myNZs+Og=";
           };
-          cargoHash = "sha256-p3IDm+C8266Lh2To0Vho0SNL91VRktMljpI89J/A0u4=";
+          cargoHash = "sha256-ikyUyadmRxHx/KhuZzWiZgmY2BTyuNGZ/C+keyLpsfE=";
           useFetchCargoVendor = true;
           buildInputs = [ pkgs.openssl ];
           buildFeatures = [ "recursor" "blocklist" "dnssec-ring" ];
