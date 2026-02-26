@@ -358,6 +358,7 @@ in
       services.hickory-dns = {
         enable = true;
         settings = {};
+        quiet = lib.mkDefault true;
         package = pkgs.rustPlatform.buildRustPackage rec {
           version = "0.26.0-alpha.1";
           pname = "hickory-dns";
