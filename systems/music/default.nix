@@ -235,7 +235,52 @@
 
 	###### kavita (calibre-like, but with better support for manga)
 	services.kavita = {
-		package = pkgs.unstable.kavita;
+		package = pkgs.unstable.kavita.overrideAttrs (final: prev: {
+			version = "0.8.9.1";
+			src = pkgs.fetchFromGitHub {
+				owner = "kareadita";
+				repo = "kavita";
+				rev = "v${final.version}";
+				hash = "sha256-pQuHnhHlctWhh3ZV5Qvi8vBVegwO57GYpwLI3ZReWws=";
+			};
+
+			# same with buildDotnetModule
+			backend = pkgs.buildDotnetModule {
+				pname = "kavita-backend";
+				inherit (final) version src;
+
+				patches = [
+					# The webroot is hardcoded as ./wwwroot
+					./patches/kavita/change-webroot.diff
+				];
+				postPatch = ''
+				  substituteInPlace API/Services/DirectoryService.cs --subst-var out
+
+				  substituteInPlace API/Startup.cs API/Services/LocalizationService.cs API/Controllers/FallbackController.cs \
+				  --subst-var-by webroot "${final.frontend}/lib/node_modules/kavita-webui/dist/browser"
+				'';
+
+				executables = [ "API" ];
+
+				projectFile = "API/API.csproj";
+				nugetDeps = ./patches/kavita/nuget-deps.json;
+				dotnet-sdk = pkgs.dotnetCorePackages.sdk_10_0;
+				dotnet-runtime = pkgs.dotnetCorePackages.aspnetcore_10_0;
+			};
+			# uugh buildNpmPackage is a mess to overrideAttrs, just copy for now
+			frontend = pkgs.buildNpmPackage {
+				pname = "kavita-frontend";
+				inherit (final) version src;
+
+				sourceRoot = "${final.src.name}/UI/Web";
+				npmBuildScript = "prod";
+				npmFlags = ["--legacy-peer-deps"];
+				npmRebuildFlags = [ "--ignore-scripts" ]; # Prevent playwright from trying to install browsers
+				npmDepsHash = "sha256-YCCls05i16EmNEEWVs58BIwjbmUnahlhuR23hkfyWks=";
+				# stuff breaks with 24 :-/
+				nodejs = pkgs.nodejs_22;
+			};
+		});
 		enable = true;
 		user = "calibre";
 		settings = {
