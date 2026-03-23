@@ -42,6 +42,8 @@ let
 				dhcpV4Config = lib.mkIf (iface.type == "wan") {
 					# don't release our ip every time we change config
 					SendRelease = false;
+					# also include dynamic v4 addresses for port forwarding
+					NFTSet = "address:ip:natFirewall:host_addrs";
 				};
 				dhcpV6Config = lib.mkIf (iface.type == "wan") {
 					# seems to be the max comcast will give
