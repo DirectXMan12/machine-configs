@@ -91,6 +91,7 @@ in
         inetChains = {
           input = ''
             # allow trusted vlans access to the router
+            ip saddr @backbone_addrs counter accept;
             ip saddr @lan_addrs counter accept;
             ip saddr @wlan_addrs counter accept;
             ip saddr @ext_wg_addrs counter accept;
@@ -106,23 +107,23 @@ in
 
             # allow all vlans to access the internet
             # TODO: restrict iot stuff
-            iifname { "sfp-lan", "wlan-vlan", "iot-vlan" } oifname @wan_faces counter accept comment "allow any internal --> wan";
+            iifname { "lan-vlan", "wlan-vlan", "iot-vlan" } oifname @wan_faces counter accept comment "allow any internal --> wan";
 
             # allow established traffic back in
             iifname @wan_faces oifname @lan_faces ct state { established, related } counter accept comment "allow established stuff back internally";
             
             # allow trusted traffic between subnets
-            iifname { "sfp-lan", "wlan-vlan" } oifname { "sfp-lan", "wlan-vlan", "iot-vlan" } counter accept comment "allow trusted <--> any internal";
-            iifname { "iot-vlan" } oifname { "sfp-lan", "wlan-vlan" } ct state { established, related } counter accept comment "iot (established) --> internal subnets";
+            iifname { "lan-vlan", "wlan-vlan" } oifname { "lan-vlan", "wlan-vlan", "iot-vlan" } counter accept comment "allow trusted <--> any internal";
+            iifname { "iot-vlan" } oifname { "lan-vlan", "wlan-vlan" } ct state { established, related } counter accept comment "iot (established) --> internal subnets";
 
             # allow external ipv6 traffic to ingress directly to machines even when unestablished, but only for specified ports
             # figure out best way to better say "only to specified machine"
-            iifname @wan_faces oifname { "sfp-lan", "wlan-vlan" } tcp dport 55000 accept comment "roon arc --> music?";
-            iifname @wan_faces oifname { "sfp-lan", "wlan-vlan" } udp dport 55000 accept comment "roon arc --> music?";
-            iifname @wan_faces oifname { "sfp-lan", "wlan-vlan" } icmpv6 type echo-request limit rate 20/second accept;
+            iifname @wan_faces oifname { "lan-vlan", "wlan-vlan" } tcp dport 55000 accept comment "roon arc --> music?";
+            iifname @wan_faces oifname { "lan-vlan", "wlan-vlan" } udp dport 55000 accept comment "roon arc --> music?";
+            iifname @wan_faces oifname { "lan-vlan", "wlan-vlan" } icmpv6 type echo-request limit rate 20/second accept;
 
             # allow vpn traffic to other subnets and vice versa
-            iifname { "sfp-lan", "wlan-vlan" } oifname { "ext-wg" } counter accept comment "allow trusted --> vpn";
+            iifname { "lan-vlan", "wlan-vlan" } oifname { "ext-wg" } counter accept comment "allow trusted --> vpn";
             iifname { "iot-vlan" } oifname { "ext-wg" } ct state { established, related } counter accept comment "iot (established) --> vpn";
             iifname { "ext-wg" } oifname @lan_faces counter accept comment "allow vpn --> any internal";
 
@@ -153,7 +154,31 @@ in
 
         "sfp-lan" = {
           link.matchConfig.OriginalName = "eth1";
-          vlans = [ "wlan-vlan" "iot-vlan" ];
+          vlans = [ "wlan-vlan" "iot-vlan" "lan-vlan" ];
+          addresses = [{
+            address = "192.168.4.1"; # nothing should be on here
+            alias = "backbone";
+            mask = 24;
+            v4.dhcp = {
+              enable = true;
+              domainName = "backbone.home.metamagical.dev";
+              pools = { };
+              reservations = [
+                # main switch (on the lan)
+                { hw-address = "0c:ea:14:1a:46:ab"; ip-address = "192.168.4.4"; hostname = "main-switch"; }
+                # living room U7 Pro AP (on the lan)
+                { hw-address = "28:70:4e:d5:38:83"; ip-address = "192.168.4.6"; hostname = "living-room-ap"; }
+              ];
+            };
+          }];
+        };
+
+        "switch0" = {
+          link.matchConfig.OriginalName = "eth0";
+        };
+
+        "lan-vlan" = {
+          vlan.id = 1;
           addresses = [{
             address = "192.168.1.1";
             alias = "lan";
@@ -180,11 +205,6 @@ in
             };
           }];
         };
-
-        "switch0" = {
-          link.matchConfig.OriginalName = "eth0";
-        };
-
         "wlan-vlan" = {
           vlan.id = 2;
           addresses = [{
