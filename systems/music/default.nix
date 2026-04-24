@@ -310,7 +310,7 @@
 		networks = {
 			"30-wired-lan" = {
 				matchConfig.Name = "eno1";
-				vlan = [ "wlan-vlan" ];
+				vlan = [ "wlan-vlan" "backbone-vlan" ];
 				networkConfig = {
 					DHCP = "ipv4";
 					IPv6AcceptRA = true;
@@ -329,6 +329,16 @@
 					ClientIdentifier = "mac";
 				};
 			};
+			"41-backbone-vlan" = {
+				matchConfig.Name = "backbone-vlan";
+				networkConfig = {
+					DHCP = "ipv4";
+					IPv6AcceptRA = true;
+				};
+				dhcpV4Config = {
+					ClientIdentifier = "mac";
+				};
+			};
 		};
 
 		# join to the wlan vlan for roon stuff, since roon can't discover cross-vlan
@@ -339,6 +349,13 @@
 					Name = "wlan-vlan";
 				};
 				vlanConfig.Id = 2;
+			};
+			"21-backbone-vlan-vlan" = {
+				netdevConfig = {
+					Kind = "vlan";
+					Name = "backbone-vlan";
+				};
+				vlanConfig.Id = 4;
 			};
 		};
 		# use stable ipv6 addresses only (part 1)
