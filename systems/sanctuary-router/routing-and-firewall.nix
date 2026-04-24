@@ -168,6 +168,8 @@ in
                 { hw-address = "0c:ea:14:1a:46:ab"; ip-address = "192.168.4.4"; hostname = "main-switch"; }
                 # living room U7 Pro AP (on the lan)
                 { hw-address = "28:70:4e:d5:38:83"; ip-address = "192.168.4.6"; hostname = "living-room-ap"; }
+                # music, since it runs the unifi management software
+                { hw-address = "54:b2:03:94:0d:30"; ip-address = "192.168.4.5"; hostname = "music"; }
               ];
             };
           }];
