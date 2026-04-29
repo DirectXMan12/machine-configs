@@ -216,7 +216,7 @@ in
             v4.dhcp = {
               enable = true;
               domainName = "w.home.metamagical.dev";
-              searchPath = ["home.metamagical.dev" "house.metamagical.dev"];
+              searchPath = [ "home.metamagical.dev" ];
               pools = { "192.168.2.100 - 192.168.2.245" = {}; };
               dynDNS = true;
               reservations = [
