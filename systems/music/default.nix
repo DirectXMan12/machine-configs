@@ -235,50 +235,71 @@
 
 	###### kavita (calibre-like, but with better support for manga)
 	services.kavita = {
-		package = pkgs.unstable.kavita.overrideAttrs (final: prev: {
-			version = "0.8.9.1";
-			src = pkgs.fetchFromGitHub {
+		# this is https://github.com/NixOS/nixpkgs/pull/515309, but using this till it's merged
+		package = with pkgs; stdenvNoCC.mkDerivation (final: {
+			pname = "kavita";
+			version = "0.9.0";
+			
+			src = fetchFromGitHub {
 				owner = "kareadita";
 				repo = "kavita";
 				rev = "v${final.version}";
-				hash = "sha256-pQuHnhHlctWhh3ZV5Qvi8vBVegwO57GYpwLI3ZReWws=";
+				hash = "sha256-kFtzSOJYzPQf4QtdOLPLtRHIQj5nTZMB+cE42yZRTmc=";
 			};
 
-			# same with buildDotnetModule
-			backend = pkgs.buildDotnetModule {
+			backend = buildDotnetModule {
 				pname = "kavita-backend";
 				inherit (final) version src;
 
 				patches = [
-					# The webroot is hardcoded as ./wwwroot
 					./patches/kavita/change-webroot.diff
 				];
 				postPatch = ''
-				  substituteInPlace API/Services/DirectoryService.cs --subst-var out
-
-				  substituteInPlace API/Startup.cs API/Services/LocalizationService.cs API/Controllers/FallbackController.cs \
-				  --subst-var-by webroot "${final.frontend}/lib/node_modules/kavita-webui/dist/browser"
+					substituteInPlace Kavita.Services/DirectoryService.cs --subst-var out
+					substituteInPlace Kavita.Server/Startup.cs Kavita.Services/LocalizationService.cs Kavita.Server/Controllers/FallbackController.cs --subst-var-by webroot "${final.frontend}/lib/node_modules/kavita-webui/dist/browser"
 				'';
 
-				executables = [ "API" ];
-
-				projectFile = "API/API.csproj";
+				projectFile = "Kavita.Server/Kavita.Server.csproj";
 				nugetDeps = ./patches/kavita/nuget-deps.json;
-				dotnet-sdk = pkgs.dotnetCorePackages.sdk_10_0;
-				dotnet-runtime = pkgs.dotnetCorePackages.aspnetcore_10_0;
+				dotnet-sdk = dotnetCorePackages.sdk_10_0;
+				dotnet-runtime = dotnetCorePackages.aspnetcore_10_0;
 			};
-			# uugh buildNpmPackage is a mess to overrideAttrs, just copy for now
-			frontend = pkgs.buildNpmPackage {
+
+			frontend = buildNpmPackage {
 				pname = "kavita-frontend";
 				inherit (final) version src;
 
 				sourceRoot = "${final.src.name}/UI/Web";
+
 				npmBuildScript = "prod";
-				npmFlags = ["--legacy-peer-deps"];
+				npmFlags = [ "--legacy-peer-deps" ];
 				npmRebuildFlags = [ "--ignore-scripts" ]; # Prevent playwright from trying to install browsers
-				npmDepsHash = "sha256-YCCls05i16EmNEEWVs58BIwjbmUnahlhuR23hkfyWks=";
-				# stuff breaks with 24 :-/
-				nodejs = pkgs.nodejs_22;
+				npmDepsHash = "sha256-Qa/lf0hH2KMDdRcBj8GW9cJGE3YZsP32z2kfTk6YNYc=";
+			};
+
+			dontBuild = true;
+
+			installPhase = ''
+				runHook preInstall
+
+				mkdir -p $out/bin $out/lib/kavita
+				ln -s $backend/lib/kavita-backend $out/lib/kavita/backend
+				ln -s $frontend/lib/node_modules/kavita-webui/dist $out/lib/kavita/frontend
+				ln -s $backend/bin/Kavita.Server $out/bin/kavita
+
+				runHook postInstall
+			'';
+			meta = {
+				description = "Fast, feature rich, cross platform reading server";
+				homepage = "https://kavitareader.com";
+				changelog = "https://github.com/kareadita/kavita/releases/tag/${finalAttrs.src.rev}";
+				license = lib.licenses.gpl3Only;
+				platforms = lib.platforms.linux;
+				maintainers = with lib.maintainers; [
+					misterio77
+					nevivurn
+				];
+				mainProgram = "kavita";
 			};
 		});
 		enable = true;
