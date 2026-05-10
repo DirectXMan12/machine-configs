@@ -10,6 +10,7 @@ let
     url = "https://gitlab.com/hagezi/mirror/-/raw/ccd0cffba940c815ebb7c54e5c3bdc3105d95c29/dns-blocklists/domains/light.txt";
     hash = "sha256-bG72tCEx4s2315tcFDktQtpP9JmoVCVt1KOzzv3a6Yo=";
   };
+  customBlocklist = ./custom-blocklist.txt;
   musicAddr = "192.168.1.5";
   musicIPv6AddrLower = "56b2:3ff:fe94:d30";
   gamingPCAddr = "192.168.1.2";
@@ -67,12 +68,14 @@ in
           };
           # add in blocklists
           "." = {
-            stores = lib.mkBefore [{
-              blocklist = {
-                # TODO: fix hickory dns to avoid this issue, but for now this has to be relative
-                lists = ["../../../../${hageziLight}"];
-              };
-            }];
+            stores = lib.mkBefore [
+              {
+                blocklist = {
+                  # TODO: fix hickory dns to avoid this issue, but for now this has to be relative
+                  lists = ["../../../../${hageziLight}" "../../../../${customBlocklist}"];
+                };
+              }
+            ];
           };
         };
       };
