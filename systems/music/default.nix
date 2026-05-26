@@ -238,13 +238,13 @@
 		# this is https://github.com/NixOS/nixpkgs/pull/515309, but using this till it's merged
 		package = with pkgs; stdenvNoCC.mkDerivation (final: {
 			pname = "kavita";
-			version = "0.9.0";
+			version = "0.9.0.2";
 			
 			src = fetchFromGitHub {
 				owner = "kareadita";
 				repo = "kavita";
 				rev = "v${final.version}";
-				hash = "sha256-kFtzSOJYzPQf4QtdOLPLtRHIQj5nTZMB+cE42yZRTmc=";
+				hash = "sha256-Wfb/Lc+BvkiJLopH1NQx1YQWzm2Sdmvg1Xmn+8YwWus=";
 			};
 
 			backend = buildDotnetModule {
