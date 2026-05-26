@@ -71,7 +71,7 @@ in
 						];
 					};
 				};
-				package = pkgs.kanidm_1_8;
+				package = pkgs.kanidm_1_10;
 			};
 
 			# set up auto-ssh-key provisioning

@@ -34,7 +34,7 @@ in
 					versions = 2;
 				};
 			};
-			package = lib.mkDefault pkgs.kanidm_1_8;
+			package = lib.mkDefault pkgs.kanidm_1_10;
 		};
 
 		security.acme.certs."${cfg.domain}" = {
