@@ -75,6 +75,7 @@
 	services.unifi = {
 		enable = true;
 		openFirewall = true;
+		jrePackage = pkgs.jdk25_headless; # newer unifis need this, will be default in nixos 26.05
 		unifiPackage = pkgs.unstable.unifi;
 		mongodbPackage = pkgs.mongodb-ce;
 	};
