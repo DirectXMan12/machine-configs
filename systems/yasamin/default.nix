@@ -24,10 +24,6 @@
 	system.stateVersion = "22.11"; # Did you read the comment?
 
 	programs.steam.enable = true;
-	environment.systemPackages = with pkgs; [
-		steamcmd
-		steam-tui
-	];
 
 	services.udev = {
 		enable = true;
