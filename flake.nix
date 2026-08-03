@@ -78,6 +78,11 @@
 				] ++ modules;
 			} // extra;
 		in rec {
+			# for nix-ci
+			checks.x86_64-linux.yasamin = nixosConfigurations.yasamin.config.system.build.toplevel;
+			checks.x86_64-linux.music = nixosConfigurations.music.config.system.build.toplevel;
+			checks.aarch64-linux.music = nixosConfigurations.sanctuary-router.config.system.build.toplevel;
+			
 			# yasamin
 			nixosConfigurations.yasamin = mkSystem {
 				name = "yasamin";

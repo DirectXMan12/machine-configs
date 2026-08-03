@@ -11,10 +11,13 @@ with lib;
 			settings = {
 				substituters = [
 					"https://directxman12.cachix.org"
+					"https://cache.nix-ci.com"
 				];
 				trusted-public-keys = [
 					"directxman12.cachix.org-1:JSNhBrYD9cUW/afQzCPaEYtCJNIVhpJeO0ewTDP2j5U="
+					"nix-ci:g3xV5BDTLtIBZr/A00IU1x0EtKKlb7YLgBN2SgYgM6A="
 				];
+				netrc-file = "/etc/nix/netrc";
 			};
 		};
 	};
