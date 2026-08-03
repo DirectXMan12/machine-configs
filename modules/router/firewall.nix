@@ -95,6 +95,20 @@ in
                   (lanFaces // wgFaces)))
             }
 
+            ${
+              builtins.concatStringsSep "\n"
+                (lists.flatten (attrsets.mapAttrsToList
+                  (name: _:
+                    ''
+                      set ${builtins.replaceStrings ["-"] ["_"] name}_v6_addrs {
+                        type ipv6_addr;
+                        flags interval;
+                      };
+                    ''
+                  )
+                  lanFaces))
+            }
+
             set wan_faces {
               type ifname;
               flags constant;
