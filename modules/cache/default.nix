@@ -11,11 +11,9 @@ with lib;
 			settings = {
 				substituters = [
 					"https://directxman12.cachix.org"
-					"https://cache.garnix.io"
 				];
 				trusted-public-keys = [
 					"directxman12.cachix.org-1:JSNhBrYD9cUW/afQzCPaEYtCJNIVhpJeO0ewTDP2j5U="
-					"cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
 				];
 			};
 		};
