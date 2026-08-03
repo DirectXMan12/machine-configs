@@ -165,6 +165,15 @@
 				tls.useACMEHost = "kavita.metamagical.house";
 				# does its own oidc
 			};
+			"home.metamagical.house" = {
+				backends.http = [{ addr = "[::1]:8123"; }];
+				tls.useACMEHost = "home.metamagical.house";
+				manage-headers = {
+					x-forwarded-for = "x-forwarded-for";
+					x-forwarded-proto = "x-forwarded-proto";
+				};
+				# does its own oidc
+			};
 		};
 	};
 	security.acme = {
@@ -186,6 +195,14 @@
 			"kavita.metamagical.house" = {
 				group = "proxy-in-anger";
 				domain = "kavita.metamagical.house";
+				dnsProvider = "porkbun";
+				environmentFile = "/var/lib/secrets/acme.secret";
+				reloadServices = ["proxy-in-anger.service"];
+			};
+
+			"home.metamagical.house" = {
+				group = "proxy-in-anger";
+				domain = "home.metamagical.house";
 				dnsProvider = "porkbun";
 				environmentFile = "/var/lib/secrets/acme.secret";
 				reloadServices = ["proxy-in-anger.service"];
@@ -327,6 +344,49 @@
 		serviceConfig.LoadCredential = lib.mkAfter [ "oidc_secret:/web-root/kavita/oidc-secret.key" ];
 	};
 
+	###### home-assistant
+	services.home-assistant = {
+		enable = true;
+		extraComponents = [	
+			# required for onboarding
+			"analytics"
+			"google_translate"
+			"met"
+			"radio_browser"
+			"shopping_list"
+
+			# zlib compression
+			"isal"
+
+			# matter
+			"matter"
+		];
+		customComponents = with pkgs.home-assistant-custom-components; [
+			auth_oidc
+		];
+		config = {
+			default_config = {};
+			http = {
+				server_host = "::1";
+				trusted_proxies = [ "::1" ];
+				use_x_forwarded_for = true;
+			};
+			auth_oidc = {
+				client_id = "home-assistant";
+				discovery_url = "https://sso.metamagical.house/oauth2/openid/home-assistant/.well-known/openid-configuration";
+				features.automatic_person_creation = true;
+				id_token_signing_alg = "ES256";
+				roles = {
+					admin = "home-admins@sso.metamagical.house";
+					user = "home-users@sso.metamagical.house";
+				};
+			};
+		};
+	};
+	services.matter-server = {
+		enable = true;
+	};
+
 	### networking setup
 	systemd.network = {
 		networks = {
@@ -383,6 +443,9 @@
 		# use stable ipv6 addresses only (part 1)
 		config.networkConfig.IPv6PrivacyExtensions = false;	
 	};
+
+	# screws up matter royally to have this on
+	services.resolved.settings.Resolve.MulticastDNS = false;
 
 	# use stable ipv6 addresses only (part 2)
 	networking.tempAddresses = "disabled";
