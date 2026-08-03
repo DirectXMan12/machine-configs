@@ -34,6 +34,12 @@ SUBSYSTEM=="hidraw", ATTRS{idVendor}=="2e6c", ATTRS{idProduct}=="3201", GROUP="p
 		'';
 	};
 
+	# allow connecting to embedded devices
+	users.users.directxman12.extraGroups = [
+		"dialout"
+		"uucp"
+	];
+
 	hardware.bluetooth.enable = true;
 
 	hardware.keyboard.qmk.enable = true;
