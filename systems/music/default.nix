@@ -332,7 +332,7 @@
 		networks = {
 			"30-wired-lan" = {
 				matchConfig.Name = "eno1";
-				vlan = [ "wlan-vlan" "backbone-vlan" ];
+				vlan = [ "wlan-vlan" "lan-vlan" ];
 				networkConfig = {
 					DHCP = "ipv4";
 					IPv6AcceptRA = true;
@@ -351,8 +351,8 @@
 					ClientIdentifier = "mac";
 				};
 			};
-			"41-backbone-vlan" = {
-				matchConfig.Name = "backbone-vlan";
+			"41-lan-vlan" = {
+				matchConfig.Name = "lan-vlan";
 				networkConfig = {
 					DHCP = "ipv4";
 					IPv6AcceptRA = true;
@@ -372,12 +372,12 @@
 				};
 				vlanConfig.Id = 2;
 			};
-			"21-backbone-vlan-vlan" = {
+			"21-lan-vlan-vlan" = {
 				netdevConfig = {
 					Kind = "vlan";
-					Name = "backbone-vlan";
+					Name = "lan-vlan";
 				};
-				vlanConfig.Id = 4;
+				vlanConfig.Id = 1;
 			};
 		};
 		# use stable ipv6 addresses only (part 1)
