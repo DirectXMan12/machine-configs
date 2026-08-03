@@ -39,6 +39,12 @@ let
 					IPv6Forwarding = true;
 					IPMasquerade = lib.mkIf (iface.type == "wireguard") "ipv4";
 				};	
+				dhcpPrefixDelegationConfig = lib.mkIf (iface.type == "lan") {
+					NFTSet = "prefix:inet:filterFirewall:${builtins.replaceStrings ["-"] ["_"] name}_v6_addrs";
+					# this keeps the prefixes delegated in order, so that they get
+					# consistent ordering upon coming back online
+					SubnetId = iface.ipv6-prefix-delegation-order;
+				};
 				dhcpV4Config = lib.mkIf (iface.type == "wan") {
 					# don't release our ip every time we change config
 					SendRelease = false;
@@ -66,7 +72,7 @@ let
 			vlanConfig.Id = iface.vlan.id;
 		} // (if iface.netdev != null then iface.netdev else {});
 	};
-  toWgFace = name: iface: {
+	toWgFace = name: iface: {
 		# TODO: make this work
 		"21-${name}-netdev" = {
 			netdevConfig = {
@@ -74,7 +80,7 @@ let
 				Name = name;
 			};
 		} // iface.netdev;
-  };
+	};
 	needsNetdev = name: iface: isVlan name iface || (iface.type == "wireguard" && iface.vlan.id == null);
 	toNetdev = name: iface: if iface.vlan.id != null then
 		toVlan name iface
@@ -115,6 +121,10 @@ let
 					};
 				});
 				default = null;
+			};
+			ipv6-prefix-delegation-order = mkOption {
+				type = types.either types.int (types.enum [ "auto" ]);
+				default = "auto";
 			};
 			addresses = mkOption {
 				# TODO: parse address to check
