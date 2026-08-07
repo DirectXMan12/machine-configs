@@ -32,7 +32,7 @@ let
 				networkConfig = {
 					# TODO: support per-type configuration properly
 					DHCP = lib.mkIf (iface.type == "wan") "ipv4";
-					IPv6AcceptRA = iface.type == "wan";
+					IPv6AcceptRA = (iface.type == "wan" && iface.acceptRA == null) || iface.acceptRA == true;
 					IPv6SendRA = iface.type == "lan";
 					DHCPPrefixDelegation = lib.mkIf (iface.type == "lan") true;
 					IPv4Forwarding = true;
@@ -93,6 +93,10 @@ let
 			type = mkOption {
 				type = types.enum ["lan" "wan" "wireguard"];
 				default = "lan";
+			};
+			acceptRA = mkOption {
+				type = types.nullOr types.bool;
+				default = null;
 			};
 			link = mkOption {
 				# TODO: can we just borrow from the type definition in systemd.network?
