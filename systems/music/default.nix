@@ -361,6 +361,9 @@
 			# matter
 			"matter"
 			"otbr"
+
+			# misc
+			"google_weather"
 		];
 		customComponents = with pkgs.home-assistant-custom-components; [
 			auth_oidc
