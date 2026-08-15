@@ -9,12 +9,63 @@
 	nixpkgs.overlays = lib.mkAfter [
 		(pkgfinal: pkgprev: {
 			roon-server = pkgprev.roon-server.overrideAttrs (final: prev: {
-				version = "2.71.1675";
+				version = "2.71.1684";
 				urlVersion = builtins.replaceStrings [ "." ] [ "0" ] final.version;
 				src = pkgs.fetchurl {
 					url = "https://download.roonlabs.com/updates/earlyaccess/RoonServer_linuxx64_${final.urlVersion}.tar.bz2";
-					hash = "sha256-4ZYRtTPqn9GBEXT4TjXXj0wV0RykZHzm4ugBghGZKPw=";
+					hash = "sha256-6nDDpsouWqaYGKp3Tn2bFaw3UnkefFoIvMiy38t4LEQ=";
 				};
+
+				installPhase =
+					let 
+						wrapBin = binPath: ''
+							(
+								binDir="$(dirname "${binPath}")"
+								binName="$(basename "${binPath}")"
+								actualBin="$binDir/$binName.exe"
+
+								rm "${binPath}"
+								makeWrapper "$actualBin" "${binPath}" \
+									--argv0 "$binName" \
+									--prefix LD_LIBRARY_PATH : "${
+										lib.makeLibraryPath (with pkgs; [
+											alsa-lib
+											icu66
+											ffmpeg
+											openssl
+										])
+									}" \
+									--prefix PATH : "$binDir" \
+									--prefix PATH : "${
+										lib.makeBinPath (with pkgs; [
+											alsa-utils
+											cifs-utils
+											ffmpeg
+										])
+									}" \
+									--chdir "$binDir"
+							)
+
+						'';
+					in
+						''
+							runHook preInstall
+							mkdir -p $out
+							mv * $out
+							rm $out/check.sh
+							rm $out/start.sh
+							rm $out/VERSION
+
+							${wrapBin "$out/Appliance/RAATServer"}
+							${wrapBin "$out/Appliance/RoonAppliance"}
+							${wrapBin "$out/Server/RoonServer"}
+
+							mkdir -p $out/bin
+							makeWrapper "$out/Server/RoonServer" "$out/bin/RoonServer" --chdir "$out"
+
+							runHook postInstall
+						'';
+					
 			});
 		})
 	];
