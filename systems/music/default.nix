@@ -369,6 +369,9 @@
 			auth_oidc
 		];
 		config = {
+			"automation ui" = "!include automations.yaml";
+			"scene ui" = "!include scenes.yaml";
+			"script ui" = "!include scripts.yaml";
 			default_config = {};
 			http = {
 				server_host = "::1";
@@ -387,9 +390,14 @@
 			};
 		};
 	};
+	systemd.tmpfiles.rules = [
+		"f ${config.services.home-assistant.configDir}/automations.yaml 0644 hass hass"
+	];
+
 	services.matter-server = {
 		enable = true;
 	};
+
 
 	### networking setup
 	systemd.network = {
