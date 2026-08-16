@@ -141,6 +141,7 @@ in
             # allow trusted traffic between subnets
             iifname { "lan-vlan", "wlan-vlan" } oifname { "lan-vlan", "wlan-vlan" } counter accept comment "allow trusted <--> trusted";
             iifname { "lan-vlan", "wlan-vlan" } oifname { "iot-vlan" } counter accept comment "allow trusted <--> iot";
+	    iifname { "iot-vlan" } oifname { "iot-vlan" } counter accept;
             iifname { "iot-vlan" } oifname { "lan-vlan", "wlan-vlan" } ct state { established, related } counter accept comment "iot (established) --> internal subnets";
             iifname { "iot-vlan" } ip6 daddr & ::${musicIPv6AddrLower} == ::${musicIPv6AddrLower} tcp dport 443 counter accept comment "iot --> music for home assistant setup";
             iifname { "iot-vlan" } ip daddr ${musicAddr} tcp dport 443 counter accept comment "iot --> music for home assistant setup";
