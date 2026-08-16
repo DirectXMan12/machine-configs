@@ -50,6 +50,9 @@
 				unstable ? false,
 			}: (if unstable then nixpkgs-unstable else nixpkgs).lib.nixosSystem {
 				inherit system;
+				specialArgs = {
+					inherit nixpkgs-unstable;
+				};
 				modules = [
 					./modules/utils/allowedUnfree-polyfill.nix
 					./modules/common

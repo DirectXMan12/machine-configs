@@ -1,8 +1,10 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, nixpkgs-unstable, ... }:
 
 {
+	disabledModules = [ "services/home-automation/matter-server.nix" ];
 	imports = [
 		./hardware.nix
+		"${nixpkgs-unstable}/nixos/modules/services/home-automation/matterjs-server.nix"
 	];
 
 	#### roon & plex
@@ -445,8 +447,10 @@
 		"f ${config.services.home-assistant.configDir}/automations.yaml 0644 hass hass"
 	];
 
-	services.matter-server = {
+	services.matterjs-server = {
 		enable = true;
+		package = pkgs.unstable.matterjs-server;
+		extraArgs = ["--vendorid=4939"];
 	};
 
 
