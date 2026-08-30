@@ -33,6 +33,8 @@
 			{ domain = "metamagical.house"; subdomain = "sso"; skipIPv6 = true; }
 			# set this up so we can just have cnames, since basically everything works like sso
 			{ domain = "metamagical.house"; subdomain = "services"; skipIPv6 = true; }
+			# root domain (mostly) can't be cnamed
+			{ domain = "metamagical.house"; subdomain = ""; skipIPv6 = true; }
 		];
 		secretApiKeyFile = "/etc/keys/oink.secret-key";
 		apiKeyFile = "/etc/keys/oink.key";
