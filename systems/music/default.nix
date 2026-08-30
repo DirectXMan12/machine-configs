@@ -445,6 +445,11 @@
 				dhcpV4Config = {
 					ClientIdentifier = "mac";
 				};
+				routes = [{
+					# ip route add fd2f:fb3a:f99a:1::/64 nexthop via fe80::4073:e7ff:fe87:6614 dev lan-vlan
+					Destination = "fd2f:fb3a:f99a:1::/64";
+					Gateway = "fe80::4073:e7ff:fe87:6614";
+				}];
 			};
 		};
 
