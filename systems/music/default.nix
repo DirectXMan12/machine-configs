@@ -172,12 +172,14 @@
 			{ domain = "metamagical.house"; subdomain = "sso"; skipIPv4 = true; }
 			# ipv4 is handled on the router, everything else is a cname
 			{ domain = "metamagical.house"; subdomain = "services"; skipIPv4 = true; }
+			# root domain, can't cname (effectively, waves hands, per dns spec)
+			{ domain = "metamagical.house"; subdomain = ""; skipIPv4 = true; }
 		];
 		apiKeyFile = "/etc/keys/oink.key";
 		secretApiKeyFile = "/etc/keys/oink.secret-key";
 	};
 
-	#### internal site hosting
+	#### internal/external site hosting
 	metamagical.serving = {
 		enable = true;
 		static-sites = let
@@ -192,20 +194,33 @@
 				x-forwarded-for = "x-forwarded-for";
 				x-forwarded-proto = "x-forwarded-proto";
 			};
-			generic-hosted = client: {
+			internal-hosted = client: {
 				oidc-auth = oidc-cfg client ["view"];
 				manage-headers = headers;
 				tls.useACMEHost = "home.metamagical.dev";
+			};
+			external-hosted = { client, acme ? "${client}.metamagical.house" }: {
+				oidc-auth = oidc-cfg client ["view"];
+				manage-headers = headers;
+				tls.useACMEHost = acme;
 			};
 		in
 			{
 				"5etools.house.metamagical.dev" = {
 					root = "/web-root/5etools";
-					proxy-config = generic-hosted "five-e-tools";
+					proxy-config = internal-hosted "five-e-tools";
 				};
-				"house.metamagical.dev" = {
+				"metamagical.house" = {
 					root = "/web-root/house";
-					proxy-config = generic-hosted "main-site";
+					proxy-config = external-hosted { client = "main-site"; acme = "metamagical.house"; };
+				};
+				"www.metamagical.house" = {
+					redirect = {
+						from = "/{*}";
+						to = "https://metamagical.house/$1";
+						code = 301;
+					};
+					proxy-config = external-hosted { client = "main-site"; acme = "metamagical.house"; };
 				};
 			};
 	};
@@ -257,6 +272,15 @@
 				group = "proxy-in-anger";
 				domain = "home.metamagical.house";
 				dnsProvider = "porkbun";
+				environmentFile = "/var/lib/secrets/acme.secret";
+				reloadServices = ["proxy-in-anger.service"];
+			};
+
+			"metamagical.house" = {
+				group = "proxy-in-anger";
+				domain = "metamagical.house";
+				dnsProvider = "porkbun";
+				extraDomainNames = [ "www.metamagical.house" ];
 				environmentFile = "/var/lib/secrets/acme.secret";
 				reloadServices = ["proxy-in-anger.service"];
 			};
