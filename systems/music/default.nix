@@ -210,6 +210,11 @@
 					root = "/web-root/5etools";
 					proxy-config = internal-hosted "five-e-tools";
 				};
+				"house.metamagical.dev" = {
+					# violate beyondcorp principles a bit, and just expose this plain internally
+					root = "/web-root/house";
+					proxy-config = { manage-headers = headers; tls.useACMEHost = "home.metamagical.dev"; };
+				};
 				"metamagical.house" = {
 					root = "/web-root/house";
 					proxy-config = external-hosted { client = "main-site"; acme = "metamagical.house"; };
@@ -220,7 +225,8 @@
 						to = "https://metamagical.house/$1";
 						code = 301;
 					};
-					proxy-config = external-hosted { client = "main-site"; acme = "metamagical.house"; };
+					# this is intentionally public since it's just a redirect
+					proxy-config = { manage-headers = headers; tls.useACMEHost = "metamagical.house"; };
 				};
 			};
 	};
