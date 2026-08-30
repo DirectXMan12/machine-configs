@@ -330,7 +330,7 @@
 
 	###### kavita (calibre-like, but with better support for manga)
 	services.kavita = {
-		package = pkgs.unstable.kavita;
+		package = pkgs.callPackage ./kavita.nix {};
 		enable = true;
 		user = "calibre";
 		settings = {
