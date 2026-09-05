@@ -52,6 +52,12 @@ in
 		services.proxy-in-anger.domains."${cfg.domain}" = lib.mkIf config.metamagical.serving.enable {
 			backends.https = [{ addr = "[::1]:18443"; skip-verifying-certs = true; }];
 			tls.useACMEHost = cfg.domain;
+			manage-headers = {
+				# set, not append
+				remote-addr = [ "x-forwarded-for" ];
+				x-forwarded-proto = "x-forwarded-proto";
+				always-clear = [ "x-real-ip" ];
+			};
 		};
 	};
 }

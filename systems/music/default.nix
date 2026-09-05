@@ -239,6 +239,12 @@
 				backends.http = [{ addr = "127.0.0.1:65004"; }];
 				tls.useACMEHost = "kavita.metamagical.house";
 				# does its own oidc
+				manage-headers = {
+					# set, not append
+					remote-addr = [ "x-forwarded-for" ];
+					x-forwarded-proto = "x-forwarded-proto";
+					always-clear = [ "x-real-ip" ];
+				};
 			};
 			"home.metamagical.house" = {
 				backends.http = [{ addr = "[::1]:8123"; }];
