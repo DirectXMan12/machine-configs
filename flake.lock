@@ -17,11 +17,11 @@
     },
     "crane_2": {
       "locked": {
-        "lastModified": 1771121070,
-        "narHash": "sha256-aIlv7FRXF9q70DNJPI237dEDAznSKaXmL5lfK/Id/bI=",
+        "lastModified": 1787326676,
+        "narHash": "sha256-lWhBbBvC05/xwivKBBiM2YNizpmgqCgyOIzomvRuwxs=",
         "owner": "ipetkov",
         "repo": "crane",
-        "rev": "a2812c19f1ed2e5ed5ce2ef7109798b575c180e1",
+        "rev": "692f7e9ef2ece8125b466f66f2af532b3edaed0d",
         "type": "github"
       },
       "original": {
@@ -286,11 +286,11 @@
         "rust-overlay": "rust-overlay_2"
       },
       "locked": {
-        "lastModified": 1771231233,
-        "narHash": "sha256-y5bYy1IlUweFv4rhxK7MeDVrjrGrfER9urxtiTLJEOM=",
+        "lastModified": 1788576847,
+        "narHash": "sha256-Hm4Ri/NXfwfQq56jXhhbd6XY6HbfO7f9PMEj8X7LGf0=",
         "ref": "main",
-        "rev": "5b06e609d18c81fd323cbdb540df260e7445aa17",
-        "revCount": 14,
+        "rev": "46d157d80a0afc2c8a9d3ed8b2dd14fefc838293",
+        "revCount": 23,
         "type": "git",
         "url": "https://tangled.org/directxman12.dev/proxy-in-anger"
       },
@@ -337,11 +337,11 @@
         "nixpkgs": "nixpkgs_3"
       },
       "locked": {
-        "lastModified": 1771125043,
-        "narHash": "sha256-ldf/s49n6rOAxl7pYLJGGS1N/assoHkCOWdEdLyNZkc=",
+        "lastModified": 1788077403,
+        "narHash": "sha256-c20YZQKzQ27qC6Wh729fWRTpI7oV4+7Ur4icKssD4Wc=",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "4912f951a26dc8142b176be2c2ad834319dc06e8",
+        "rev": "89e26eeaafa88a2ede4778734acc794ff0299beb",
         "type": "github"
       },
       "original": {
