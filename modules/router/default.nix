@@ -32,13 +32,19 @@ let
 				networkConfig = {
 					# TODO: support per-type configuration properly
 					DHCP = lib.mkIf (iface.type == "wan") "ipv4";
-					IPv6AcceptRA = iface.type == "wan";
+					IPv6AcceptRA = (iface.type == "wan" && iface.acceptRA == null) || iface.acceptRA == true;
 					IPv6SendRA = iface.type == "lan";
 					DHCPPrefixDelegation = lib.mkIf (iface.type == "lan") true;
 					IPv4Forwarding = true;
 					IPv6Forwarding = true;
 					IPMasquerade = lib.mkIf (iface.type == "wireguard") "ipv4";
 				};	
+				dhcpPrefixDelegationConfig = lib.mkIf (iface.type == "lan") {
+					NFTSet = "prefix:inet:filterFirewall:${builtins.replaceStrings ["-"] ["_"] name}_v6_addrs";
+					# this keeps the prefixes delegated in order, so that they get
+					# consistent ordering upon coming back online
+					SubnetId = iface.ipv6-prefix-delegation-order;
+				};
 				dhcpV4Config = lib.mkIf (iface.type == "wan") {
 					# don't release our ip every time we change config
 					SendRelease = false;
@@ -66,7 +72,7 @@ let
 			vlanConfig.Id = iface.vlan.id;
 		} // (if iface.netdev != null then iface.netdev else {});
 	};
-  toWgFace = name: iface: {
+	toWgFace = name: iface: {
 		# TODO: make this work
 		"21-${name}-netdev" = {
 			netdevConfig = {
@@ -74,7 +80,7 @@ let
 				Name = name;
 			};
 		} // iface.netdev;
-  };
+	};
 	needsNetdev = name: iface: isVlan name iface || (iface.type == "wireguard" && iface.vlan.id == null);
 	toNetdev = name: iface: if iface.vlan.id != null then
 		toVlan name iface
@@ -87,6 +93,10 @@ let
 			type = mkOption {
 				type = types.enum ["lan" "wan" "wireguard"];
 				default = "lan";
+			};
+			acceptRA = mkOption {
+				type = types.nullOr types.bool;
+				default = null;
 			};
 			link = mkOption {
 				# TODO: can we just borrow from the type definition in systemd.network?
@@ -115,6 +125,10 @@ let
 					};
 				});
 				default = null;
+			};
+			ipv6-prefix-delegation-order = mkOption {
+				type = types.either types.int (types.enum [ "auto" ]);
+				default = "auto";
 			};
 			addresses = mkOption {
 				# TODO: parse address to check

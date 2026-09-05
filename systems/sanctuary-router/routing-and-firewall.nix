@@ -25,6 +25,17 @@ in
       # TODO: lib.mkDefault on these settings?
       DHCPPrefixDelegation = lib.mkForce false;
     };
+    services.avahi = {
+      enable = true;
+      reflector = true;
+      debug = true;
+      wideArea = false;
+      allowInterfaces = [
+        "wlan-vlan"
+        "iot-vlan"
+        "lan-vlan"
+      ];
+    };
     router = {
       enable = true;
 
@@ -96,12 +107,24 @@ in
           input = ''
             # allow trusted vlans access to the router
             ip saddr @backbone_addrs counter accept;
+            ip6 saddr @sfp_lan_v6_addrs counter accept;
             ip saddr @lan_addrs counter accept;
+            ip6 saddr @lan_vlan_v6_addrs counter accept;
             ip saddr @wlan_addrs counter accept;
+            ip6 saddr @wlan_vlan_v6_addrs counter accept;
             ip saddr @ext_wg_addrs counter accept;
-            # don't allow iot devices access to the router, except for dns
-            ip saddr @iot_addrs udp dport 53 accept;
+
+            # don't allow iot devices access to the router, except for dns and mdns dns-sd
+            # (mdns is needed for mdns reflecting with avahi)
+            ip saddr @iot_addrs udp dport 53 accept comment "dns";
+            ip saddr @iot_addrs udp dport 5353 counter accept comment "dns-sd over mdns";
+            ip6 saddr @iot_vlan_v6_addrs udp dport 53 accept comment "dns"; 
+            ip6 saddr @iot_vlan_v6_addrs udp dport 5353 accept comment "dns-sd over mdns"; 
+
             ip saddr @iot_addrs counter drop comment "drop iot input to router";
+            ip6 saddr @iot_vlan_v6_addrs counter drop comment "drop iot input to router"
+
+            # wireguard
             iifname @wan_faces udp dport ${toString wireguard-port} counter accept;
           '';
           # TODO: make the ipv6 forwards a more formalized system
@@ -117,8 +140,13 @@ in
             iifname @wan_faces oifname @lan_faces ct state { established, related } counter accept comment "allow established stuff back internally";
             
             # allow trusted traffic between subnets
-            iifname { "lan-vlan", "wlan-vlan" } oifname { "lan-vlan", "wlan-vlan", "iot-vlan" } counter accept comment "allow trusted <--> any internal";
+            iifname { "lan-vlan", "wlan-vlan" } oifname { "lan-vlan", "wlan-vlan" } counter accept comment "allow trusted <--> trusted";
+            iifname { "lan-vlan", "wlan-vlan" } oifname { "iot-vlan" } counter accept comment "allow trusted <--> iot";
+	    iifname { "iot-vlan" } oifname { "iot-vlan" } counter accept;
             iifname { "iot-vlan" } oifname { "lan-vlan", "wlan-vlan" } ct state { established, related } counter accept comment "iot (established) --> internal subnets";
+            iifname { "iot-vlan" } ip6 daddr & ::${musicIPv6AddrLower} == ::${musicIPv6AddrLower} tcp dport 443 counter accept comment "iot --> music for home assistant setup";
+            iifname { "iot-vlan" } ip daddr ${musicAddr} tcp dport 443 counter accept comment "iot --> music for home assistant setup";
+            iifname { "iot-vlan" } oifname { "lan-vlan", "wlan-vlan" } ct state { new, invalid, untracked } counter drop comment "explicitly drop non-established iot traffic to count it";
 
             # allow external ipv6 traffic to ingress directly to machines even when unestablished, but only for specified ports
             # figure out best way to better say "only to specified machine"
@@ -159,6 +187,7 @@ in
         "sfp-lan" = {
           link.matchConfig.OriginalName = "eth1";
           vlans = [ "wlan-vlan" "iot-vlan" "lan-vlan" ];
+          ipv6-prefix-delegation-order = 3;
           addresses = [{
             address = "192.168.4.1"; # nothing should be on here
             alias = "backbone";
@@ -185,6 +214,7 @@ in
 
         "lan-vlan" = {
           vlan.id = 1;
+          ipv6-prefix-delegation-order = 1;
           addresses = [{
             address = "192.168.1.1";
             alias = "lan";
@@ -213,6 +243,7 @@ in
         };
         "wlan-vlan" = {
           vlan.id = 2;
+          ipv6-prefix-delegation-order = 0;
           addresses = [{
             address = "192.168.2.1";
             alias = "wlan";
@@ -237,6 +268,8 @@ in
 
         "iot-vlan" = {
           vlan.id = 3;
+		  acceptRA = true; # thread br sends ra
+          ipv6-prefix-delegation-order = 2;
           addresses = [{
             address = "192.168.3.1";
             alias = "iot";
@@ -249,6 +282,7 @@ in
               reservations = [
                 { hw-address = "94:dd:f8:99:f9:fb"; ip-address = "192.168.3.2"; hostname = "printer"; }
                 { hw-address = "68:fe:71:88:ad:58"; ip-address = "192.168.3.3"; hostname = "himill-d1s"; }
+                { hw-address = "30:ed:a0:d4:c0:f4"; ip-address = "192.168.3.4"; hostname = "thread-border-router"; }
               ];
             };
           }];

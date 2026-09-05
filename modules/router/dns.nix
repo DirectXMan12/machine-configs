@@ -359,24 +359,6 @@ in
         enable = true;
         settings = {};
         quiet = lib.mkDefault true;
-        package = pkgs.rustPlatform.buildRustPackage rec {
-          version = "0.26.0-alpha.1";
-          pname = "hickory-dns";
-
-          src = pkgs.fetchFromGitHub {
-            owner = "hickory-dns";
-            repo = "hickory-dns";
-            tag = "v${version}";
-            hash = "sha256-tXBGnrD0KrIhRKBEeq+jLSgFWHFTRUU6AGiAGEALIwk=";
-          };
-          cargoHash = "sha256-p3IDm+C8266Lh2To0Vho0SNL91VRktMljpI89J/A0u4=";
-          useFetchCargoVendor = true;
-          buildInputs = [ pkgs.openssl ];
-          buildFeatures = [ "recursor" "blocklist" "dnssec-ring" ];
-          nativeBuildInputs = [ pkgs.pkg-config ];
-          doCheck = false;
-          meta.mainProgram = "hickory-dns";
-        };
         configFile = let
           allZones = attrsets.mapAttrsToList (name: zone: removeNulls ({
             zone = name;
