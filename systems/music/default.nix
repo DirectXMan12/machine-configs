@@ -1,10 +1,11 @@
 { config, pkgs, lib, nixpkgs-unstable, ... }:
 
 {
-	disabledModules = [ "services/home-automation/matter-server.nix" ];
+	disabledModules = [ "services/home-automation/matter-server.nix" "services/home-automation/home-assistant.nix" ];
 	imports = [
 		./hardware.nix
 		"${nixpkgs-unstable}/nixos/modules/services/home-automation/matterjs-server.nix"
+		"${nixpkgs-unstable}/nixos/modules/services/home-automation/home-assistant.nix"
 	];
 
 	#### roon & plex
@@ -364,7 +365,8 @@
 	###### home-assistant
 	services.home-assistant = {
 		enable = true;
-		extraComponents = [	
+		package = pkgs.unstable.home-assistant;
+		extraComponents = [
 			# required for onboarding
 			"analytics"
 			"google_translate"
@@ -382,7 +384,7 @@
 			# misc
 			"google_weather"
 		];
-		customComponents = with pkgs.home-assistant-custom-components; [
+		customComponents = with pkgs.unstable.home-assistant-custom-components; [
 			auth_oidc
 		];
 		config = {
