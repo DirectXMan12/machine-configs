@@ -95,8 +95,11 @@ let
         {
           forward = {
             name_servers = [{
-              socket_addr = "8.8.8.8:53";
-              protocol = { type = "udp"; };
+              ip = "8.8.8.8";
+              connections = [{
+                port = 53;
+                protocol.type = "udp";
+              }];
               trust_negative_responses = false;
             }];
           };
@@ -127,11 +130,11 @@ let
           type = "primary";
           stores = [{
             sqlite = {
-              zone_file_path = pkgs.writeText "dyn-${addr.v4.dhcp.domainName}.zone" ''
+              zone_path = pkgs.writeText "dyn-${addr.v4.dhcp.domainName}.zone" ''
                 ${soa}
                 router                  A       ${addr.address}
               '';
-              journal_file_path = "dyn-${addr.v4.dhcp.domainName}.jrnl";
+              journal_path = "dyn-${addr.v4.dhcp.domainName}.jrnl";
               allow_update = true;
               tsig_keys = [{
                 name = "main-key";
@@ -156,11 +159,11 @@ let
               type = "primary";
               stores = [{
                 sqlite = {
-                  zone_file_path = pkgs.writeText "dyn-rev-${addr.v4.dhcp.domainName}.zone" ''
+                  zone_path = pkgs.writeText "dyn-rev-${addr.v4.dhcp.domainName}.zone" ''
                     ${soa}
                     ${lastAddrComponent}                       PTR     router.${addr.v4.dhcp.domainName}.
                   '';
-                  journal_file_path = "dyn-rev-${addr.v4.dhcp.domainName}.jrnl";
+                  journal_path = "dyn-rev-${addr.v4.dhcp.domainName}.jrnl";
                   allow_update = true;
                   tsig_keys = [{
                     name = "main-key";
@@ -229,13 +232,19 @@ let
         name_servers = mkOption {
           type = types.listOf (types.submodule {
             options = {
-              socket_addr = mkOption { type = types.str; };
+              ip = mkOption { type = types.str; };
               # TODO: make this nicer in nix
-              protocol = mkOption { type = types.submodule {
+              connections = mkOption { type = types.listOf (types.submodule {
                 options = {
-                  type = mkOption { type = types.enum ["tcp" "udp" "tls" "quic" "https" "h3"]; };
+                  port = mkOption { type = types.port; };
+                  protocol = mkOption { type = types.submodule {
+                    options = {
+                      type = mkOption { type = types.enum ["tcp" "udp" "tls" "quic" "https" "h3"]; };
+                    };
+                  }; };
+                  # bind_addr = mkOption { type = types.nullOr types.str; default = null; };
                 };
-              }; };
+              }); };
               trust_negative_responses = mkOption { type = types.nullOr types.bool; default = null; };
               # TODO: make removeNulls work with lists
               # tls_dns_name = mkOption { type = types.nullOr types.str; default = null; };
@@ -251,15 +260,15 @@ let
   fileStoreOptions = with lib; mkOption {
     type = types.submodule {
       options = {
-        zone_file_path = mkOption { type = types.path; };
+        zone_path = mkOption { type = types.path; };
       };
     };
   };
   sqliteStoreOptions = with lib; mkOption {
     type = types.submodule {
       options = {
-        zone_file_path = mkOption { type = types.path; };
-        journal_file_path = mkOption { type = types.str; };
+        zone_path = mkOption { type = types.path; };
+        journal_path = mkOption { type = types.str; };
         allow_update = mkOption { type = types.bool; };
         tsig_keys = mkOption { type = types.listOf (types.submodule {
           options = {

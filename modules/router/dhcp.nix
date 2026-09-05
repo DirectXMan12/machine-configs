@@ -55,7 +55,7 @@ in
 								"tsig-keys": [{
 									"name": "main-key",
 									"algorithm": "HMAC-SHA256",
-									<?include "/etc/kea/main-tsig.json"?>
+									"secret-file": "/var/lib/kea/main-tsig.key"
 								}]
 							}
 						}
