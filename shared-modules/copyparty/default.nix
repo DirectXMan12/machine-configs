@@ -141,7 +141,7 @@ in
 			tls.useACMEHost = cfg.domain;
 
 			manage-headers = {
-				x-forwarded-for = "x-forwarded-for";
+				remote-addr = [ "x-forwarded-for" ];
 				x-forwarded-proto = "x-forwarded-proto";
 			};
 
