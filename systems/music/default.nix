@@ -211,11 +211,6 @@
 					root = "/web-root/5etools";
 					proxy-config = internal-hosted "five-e-tools";
 				};
-				"house.metamagical.dev" = {
-					# violate beyondcorp principles a bit, and just expose this plain internally
-					root = "/web-root/house";
-					proxy-config = { manage-headers = headers; tls.useACMEHost = "home.metamagical.dev"; };
-				};
 				"metamagical.house" = {
 					root = "/web-root/house";
 					proxy-config = external-hosted { client = "main-site"; acme = "metamagical.house"; };
