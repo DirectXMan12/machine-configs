@@ -4,6 +4,8 @@ with lib;
 {
 	imports = [
 		./sso-pam.nix
+		./base.nix
+		./software.nix
 	];
 
 	options = {
