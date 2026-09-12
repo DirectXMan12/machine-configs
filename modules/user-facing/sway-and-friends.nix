@@ -9,7 +9,6 @@ with lib;
 			# sway itself, and other bits
 			sway
 			wayland
-			swaylock	# lock...
 			swayidle	# ...and auto-lock
 			slurp
 			sway-contrib.grimshot # screenshots (wraps grim & slurp)
@@ -76,16 +75,22 @@ with lib;
 			enable = true;
 			wrapperFeatures.gtk = true;
 			wrapperFeatures.base = true;
+			# explicitly override this -- don't bring in foot :-/
+			extraPackages = [ pkgs.swayidle ];
 		};
 
-		services.greetd = {
+		# these are required for noctalia to work
+		services.upower.enable = true; # see battery status
+		services.tuned.enable = true; # control power profiles
+
+		# set ourselves up a greeter
+		services.greetd.enable = true;
+		services.displayManager.noctalia-greeter = {
 			enable = true;
-			settings = {
-				default_session = {
-					command = "${pkgs.greetd.tuigreet}/bin/tuigreet --time --cmd sway";
-				};
-			};
+			# allow sync from noctalia
+			passwordless-sync-users = [ "directxman12" ];
 		};
+		security.pam.services.greetd.enableGnomeKeyring = true;
 
 		# for waybar
 		fonts.packages = with pkgs; [

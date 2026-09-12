@@ -19,9 +19,12 @@
 
     proxy-in-anger.url = "git+https://tangled.org/directxman12.dev/proxy-in-anger?ref=main";
     proxy-in-anger.inputs.nixpkgs.follows = "nixpkgs";
+
+		noctalia-greeter.url = "github:noctalia-dev/noctalia-greeter";
+		noctalia-greeter.inputs.nixpkgs.follows = "nixpkgs-unstable";
 	};
 
-	outputs = { self, nixpkgs, nixos-hardware, nixpkgs-unstable, lanzaboote, nixos-sbc, proxy-in-anger, ... }@attrs:
+	outputs = { self, nixpkgs, nixos-hardware, nixpkgs-unstable, lanzaboote, nixos-sbc, proxy-in-anger, noctalia-greeter, ... }@attrs:
 		let
 			system = "x86_64-linux";
 			overlays = {
@@ -91,6 +94,10 @@
 				name = "yasamin";
 				modules = [
 					nixos-hardware.nixosModules.lenovo-thinkpad-x1-9th-gen
+					# tmp (while testing noctalia-greeter)
+					({ config, pkgs, ... }: {
+						imports = [ noctalia-greeter.nixosModules.default ];
+					})
 				];
 				cfg = {
 					local.userFacing = true;
