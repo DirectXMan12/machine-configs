@@ -81,7 +81,6 @@ with lib;
 
 		# these are required for noctalia to work
 		services.upower.enable = true; # see battery status
-		services.tuned.enable = true; # control power profiles
 
 		# set ourselves up a greeter
 		services.greetd.enable = true;
