@@ -80,6 +80,9 @@
 							]
 						];
 					})
+					({ config, pkgs, ... }: {
+						imports = [ noctalia-greeter.nixosModules.default ];
+					})
 					({ ... }: cfg)
 				] ++ modules;
 			} // extra;
@@ -94,10 +97,6 @@
 				name = "yasamin";
 				modules = [
 					nixos-hardware.nixosModules.lenovo-thinkpad-x1-9th-gen
-					# tmp (while testing noctalia-greeter)
-					({ config, pkgs, ... }: {
-						imports = [ noctalia-greeter.nixosModules.default ];
-					})
 				];
 				cfg = {
 					local.userFacing = true;
