@@ -4,11 +4,11 @@
 	nixpkgs.overlays = lib.mkAfter [
 		(pkgfinal: pkgprev: {
 			roon-server = pkgprev.roon-server.overrideAttrs (final: prev: {
-				version = "2.74.1706";
+				version = "2.74.1713";
 				urlVersion = builtins.replaceStrings [ "." ] [ "0" ] final.version;
 				src = pkgs.fetchurl {
 					url = "https://download.roonlabs.com/updates/earlyaccess/RoonServer_linuxx64_${final.urlVersion}.tar.bz2";
-					hash = "sha256-C8nHerk/B5s5ZedO40UhPv5v9Pd1odW1CGMjeuD/qcU=";
+					hash = "sha256-oKSfQaN3v5QYrILDWVERlmx96ffimvJCFF2mK4FQY9w=";
 				};
 
 				installPhase =
