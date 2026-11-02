@@ -236,6 +236,8 @@ in
                 { hw-address = "54:b2:03:94:0d:30"; ip-address = musicAddr; hostname = "music"; }
                 # living room U7 Pro AP (on the lan)
                 { hw-address = "28:70:4e:d5:38:83"; ip-address = "192.168.1.6"; hostname = "living-room-ap"; }
+                # living-room-roon-bridge (87 is wireless)
+                { hw-address = "d8:3a:dd:bc:04:86"; ip-address = "192.168.1.7"; hostname = "living-room-roon-bridge"; }
               ];
             };
           }];
@@ -257,7 +259,6 @@ in
                 # .3 was xyrithes
                 # music (wlan vlan via wired)
                 { hw-address = "54:b2:03:94:0d:30"; ip-address = "192.168.2.4"; hostname = "music"; }
-                { hw-address = "d8:3a:dd:bc:04:87"; ip-address = "192.168.2.5"; hostname = "living-room-roon-bridge"; }
                 # living room U7 Pro AP (on the wlan)
                 { hw-address = "28:70:4e:d5:38:83"; ip-address = "192.168.2.6"; hostname = "living-room-ap"; }
               ];
